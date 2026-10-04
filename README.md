@@ -24,7 +24,7 @@ plain words, and the source of truth.
 | `drizzle/` | Migrations, applied at startup |
 | `solver/` | `rite-solver`, the Rust + GMP opener and benchmark |
 | `test/` | Vitest |
-| `deploy/` | Droplet build, systemd units, nginx config |
+| `deploy/` | Deployment setup |
 
 ## Development
 
@@ -63,7 +63,7 @@ skips a year). The same jobs are CLI commands:
 
 ```sh
 pnpm rite status | open | close [year] | tick | commitments [year] | ledger <year> | export <year> | backup <dir>
-# on the droplet, as the site user, from ~/current/app:
+# from a built copy:
 node build/server/cli.mjs status
 ```
 
@@ -75,25 +75,17 @@ first failure, then the NIST beacon pulse at the same timestamp is used, and
 
 1. `cd solver && cargo build --release && ./target/release/rite-solver bench` on a fast desktop CPU.
 2. Add the year's row to `src/shared/seals.ts`.
-3. Refresh `deploy/nginx/cloudflare-real-ip.conf` from <https://www.cloudflare.com/ips/> if it changed.
-4. Ship, and check `/api/state` shows the right commitments.
+3. Deploy, and check `/api/state` shows the right commitments.
 
 ## Deploying
 
-The site is a server process ("kind 4" in droplet-infra's `NEW-SITE.md`):
-`scripts/ship.sh` uploads the committed source, the droplet builds it with
-`deploy/build`, and receive-site restarts `deploy/systemd/rite.service`
-(Node on 127.0.0.1:8710). nginx proxies to it (`deploy/nginx/`). The
-database lives in `/srv/sites/rite/data/`, outside releases, with backups
-every 6 hours in `/srv/sites/rite/backups/`. Secrets go in
-`/srv/sites/rite/rite.env`:
+It runs as a single Node process behind a reverse proxy, with the SQLite
+database kept outside the deployed code. `deploy/` and `scripts/ship.sh`
+hold the setup.
 
-```sh
-TURNSTILE_SITE_KEY=...
-TURNSTILE_SECRET=...
-LEDGER_REPO=dabaez/1010-ledger
-LEDGER_TOKEN=...      # fine-grained, Contents: read and write on the ledger repo only
-```
+Optional settings, read from the environment:
 
-Without Turnstile keys, writes are not captcha-protected; without the ledger
-settings, closed years are not exported (the server says so at startup).
+- `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET`: the CAPTCHA on writes.
+- `LEDGER_REPO`, `LEDGER_TOKEN`: where closed years are exported.
+
+Without them the server still runs and says at startup what is off.
