@@ -1,0 +1,148 @@
+---
+import Shrine from '../layouts/Shrine.astro';
+---
+
+<Shrine title="The Tower" description="The Tower of Hanoi of the Annual Rite: its current state and every move ever made, one per year." wide>
+  <section class="center">
+    <p class="eyebrow">Ritual I</p>
+    <h1>The Tower</h1>
+    <p class="dim lede">
+      Twelve rings must travel from A to C, one move per year, chosen by vote. A perfect crowd would need 4,095 years.
+      This one can undo its own work.
+    </p>
+  </section>
+
+  <section class="panel">
+    <svg id="tower-svg" class="tower-svg"></svg>
+    <p class="stat-row center-row">
+      <span>State: <strong id="state" class="mono">–</strong></span>
+      <span>Moves made: <strong id="moves-made">–</strong>.</span>
+      <span>Optimal moves remaining: <strong id="optimal-remaining">–</strong>.</span>
+    </p>
+    <div class="replay" id="replay" hidden>
+      <label for="replay-range" class="eyebrow">Replay: after <span id="replay-label">–</span></label>
+      <input type="range" id="replay-range" min="0" max="0" value="0" step="1" />
+    </div>
+  </section>
+
+  <section>
+    <h2>Every move</h2>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Day</th>
+            <th>Move</th>
+            <th>Votes</th>
+            <th>Decided by</th>
+            <th>State after</th>
+            <th>Optimal remaining</th>
+          </tr>
+        </thead>
+        <tbody id="history">
+          <tr><td colspan="7" class="dim">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="dim small">
+      The state lists, for each ring from smallest to largest, the peg it sits on. "Optimal remaining" is the fewest
+      moves from there to all twelve rings on C.
+    </p>
+  </section>
+</Shrine>
+
+<style>
+  .lede {
+    max-width: 36rem;
+    margin: 0 auto 2.5rem;
+  }
+  .tower-svg {
+    width: 100%;
+    height: auto;
+    display: block;
+    margin-bottom: 1rem;
+  }
+  .center-row {
+    justify-content: center;
+  }
+  .replay {
+    margin-top: 1.5rem;
+  }
+  .replay input {
+    width: 100%;
+    accent-color: var(--gold);
+  }
+  .small {
+    font-size: 0.95rem;
+  }
+</style>
+
+<script>
+  import { $, el, fmt, getJson } from '../scripts/api';
+  import { drawTower } from '../scripts/tower-draw';
+  import { START_STATE } from '../shared/tower';
+
+  interface MoveView {
+    year: number;
+    number: number;
+    state_before: string;
+    move: string;
+    state_after: string;
+    tally: Record<string, number>;
+    decided_by: 'votes' | 'tiebreak' | 'no_votes';
+    optimal_remaining: number;
+  }
+  interface TowerResponse {
+    state: string;
+    movesMade: number;
+    optimalRemaining: number;
+    complete: boolean;
+    history: MoveView[];
+  }
+
+  const DECIDED = { votes: 'votes', tiebreak: 'tie, broken by the beacon', no_votes: 'no votes; the beacon chose' };
+
+  const t = await getJson<TowerResponse>('/api/tower');
+  const svg = document.querySelector<SVGSVGElement>('#tower-svg')!;
+  drawTower(svg, t.state);
+  $('#state').textContent = t.state;
+  $('#moves-made').textContent = fmt(t.movesMade);
+  $('#optimal-remaining').textContent = fmt(t.optimalRemaining);
+
+  const body = $('#history');
+  if (!t.history.length) {
+    body.replaceChildren(el('tr', {}, el('td', { colspan: '7', class: 'dim' }, 'No move has been made yet. The first is made at the close of the first Day.')));
+  } else {
+    body.replaceChildren(
+      ...[...t.history].reverse().map((m) =>
+        el(
+          'tr',
+          {},
+          el('td', {}, String(m.number)),
+          el('td', {}, String(m.year)),
+          el('td', { class: 'mono' }, m.move),
+          el('td', { class: 'mono' }, Object.entries(m.tally).map(([k, v]) => `${k} ${v}`).join(' · ')),
+          el('td', {}, DECIDED[m.decided_by] ?? m.decided_by),
+          el('td', { class: 'mono' }, m.state_after),
+          el('td', { class: 'mono' }, fmt(m.optimal_remaining)),
+        ),
+      ),
+    );
+
+    const replay = $('#replay');
+    const range = $('#replay-range') as HTMLInputElement;
+    const label = $('#replay-label');
+    replay.hidden = false;
+    range.max = String(t.history.length);
+    range.value = String(t.history.length);
+    const show = () => {
+      const i = Number(range.value);
+      const state = i === 0 ? START_STATE : t.history[i - 1]!.state_after;
+      label.textContent = i === 0 ? 'the beginning' : `the Day of ${t.history[i - 1]!.year} (move ${i})`;
+      drawTower(svg, state);
+    };
+    range.addEventListener('input', show);
+    show();
+  }
+</script>

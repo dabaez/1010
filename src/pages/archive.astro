@@ -1,0 +1,267 @@
+---
+import Shrine from '../layouts/Shrine.astro';
+---
+
+<Shrine title="Archive" description="Every year of the Annual Rite: the Number and the Bit with their beacon rounds, the vote tallies, and the sealed guestbook puzzles." wide>
+  <section class="center">
+    <p class="eyebrow">The record</p>
+    <h1>Archive</h1>
+    <p class="dim lede">
+      Every year's Number and Bit with the rounds that decided them, every tally, and every sealed entry. The same
+      record is written each year to a public ledger, so the Rite can outlive this site.
+    </p>
+  </section>
+
+  <section class="panel" id="next">
+    <h2>Committed in advance</h2>
+    <p class="dim">Loading…</p>
+  </section>
+
+  <div id="years"></div>
+</Shrine>
+
+<style>
+  .lede {
+    max-width: 38rem;
+    margin: 0 auto 2.5rem;
+  }
+  #years :global(.year h2) {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  #years :global(.year h2 small) {
+    font-size: 0.95rem;
+    color: var(--dim);
+    font-style: italic;
+  }
+  #years :global(.big-number) {
+    font-family: var(--mono);
+    font-size: clamp(1.2rem, 4.5vw, 1.9rem);
+    color: var(--gold-2);
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+  :global(dl.facts) {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.35rem 1.2rem;
+    margin: 1rem 0;
+  }
+  :global(dl.facts dt) {
+    color: var(--dim);
+  }
+  :global(dl.facts dd) {
+    margin: 0;
+    min-width: 0;
+  }
+  @media (max-width: 34rem) {
+    :global(dl.facts) {
+      grid-template-columns: 1fr;
+      gap: 0.1rem;
+    }
+    :global(dl.facts dd) {
+      margin-bottom: 0.6rem;
+    }
+  }
+  #years :global(details) {
+    margin-top: 1.2rem;
+  }
+  #years :global(summary) {
+    cursor: pointer;
+    color: var(--gold);
+  }
+  #years :global(.entry) {
+    border-top: 1px solid var(--line);
+    padding: 0.9rem 0;
+  }
+  #years :global(.entry:first-child) {
+    border-top: 0;
+  }
+  #years :global(.entry header) {
+    display: flex;
+    gap: 0.4rem 1.2rem;
+    flex-wrap: wrap;
+    align-items: baseline;
+  }
+</style>
+
+<script>
+  import { DRAND_CHAIN, drandRoundUrl } from '../shared/beacon';
+  import { $, el, fmt, getJson, utc } from '../scripts/api';
+  import { verifyDrandInBrowser } from '../scripts/verify';
+
+  interface BeaconView {
+    committed_drand_round: number;
+    committed_drand_url: string;
+    source: string | null;
+    randomness: string | null;
+    proof: Record<string, unknown> | null;
+  }
+  interface YearView {
+    year: number;
+    window: { opens_at: string; closes_at: string };
+    closed_at: string | null;
+    number: { decimal: string; hex: string } | null;
+    bit: number | null;
+    beacon: {
+      number: BeaconView;
+      tiebreak: BeaconView & { derivation: { choices: string[]; index: number } | null };
+    };
+    tower: {
+      number: number;
+      move: string;
+      tally: Record<string, number>;
+      decided_by: string;
+      state_before: string;
+      state_after: string;
+      optimal_remaining: number;
+    } | null;
+    seals: { benchmark: { cpu: string; squaringsPerSecond: number; date: string }; t: Record<string, string> };
+    guestbook_count: number;
+  }
+  interface Entry {
+    id: number;
+    seal: string;
+    n_hex: string;
+    t: string;
+    iv_b64: string;
+    ciphertext_b64: string;
+    created_at: string;
+  }
+
+  const data = await getJson<{ years: YearView[]; next: { year: number; opensAt: string; closesAt: string; numberRound: number; tiebreakRound: number } }>('/api/archive');
+
+  const n = data.next;
+  $('#next').replaceChildren(
+    el('h2', {}, `Committed for ${n.year}`),
+    el(
+      'p',
+      {},
+      `The Number and the Bit of ${n.year} will come from drand quicknet round `,
+      el('a', { href: drandRoundUrl(n.numberRound) }, fmt(n.numberRound)),
+      `, emitted at the opening, ${utc(n.opensAt)}. A tie at the close will be broken by round `,
+      el('a', { href: drandRoundUrl(n.tiebreakRound) }, fmt(n.tiebreakRound)),
+      `, at ${utc(n.closesAt)}.`,
+    ),
+    el(
+      'p',
+      { class: 'dim small' },
+      `Round = floor((t − ${DRAND_CHAIN.genesis}) / ${DRAND_CHAIN.period}) + 1 for chain `,
+      el('span', { class: 'hex' }, DRAND_CHAIN.hash),
+      '. Those links will answer once the rounds exist.',
+    ),
+  );
+
+  function sourceName(s: string | null): string {
+    if (s === 'drand') return 'drand quicknet';
+    if (s === 'nist') return 'NIST Randomness Beacon (drand was unreachable for an hour)';
+    if (s === 'fake') return 'fake (development)';
+    return 'not yet drawn';
+  }
+
+  function beaconLink(b: BeaconView): Node {
+    if (b.source === 'nist' && b.proof?.uri) return el('a', { href: String(b.proof.uri) }, `NIST pulse ${b.proof.pulseIndex}`);
+    return el('a', { href: drandRoundUrl(b.committed_drand_round) }, `round ${fmt(b.committed_drand_round)}`);
+  }
+
+  const DECIDED: Record<string, string> = {
+    votes: 'the most votes',
+    tiebreak: 'a tie, broken by the close round',
+    no_votes: 'no votes; the close round chose among all legal moves',
+  };
+
+  function yearCard(y: YearView): HTMLElement {
+    const facts = el('dl', { class: 'facts' });
+    const row = (k: string, ...v: (Node | string)[]) => facts.append(el('dt', {}, k), el('dd', {}, ...v));
+
+    row('Window', `${utc(y.window.opens_at)} to ${utc(y.window.closes_at)}`);
+    if (y.number) {
+      row('Bit', el('span', { class: 'mono' }, String(y.bit)));
+      row('Source', sourceName(y.beacon.number.source), ', ', beaconLink(y.beacon.number));
+      row('Randomness', el('span', { class: 'hex' }, y.beacon.number.randomness ?? ''));
+      row('Derivation', 'first 8 bytes as an unsigned 64-bit integer; the Bit is the lowest bit of the last byte');
+    } else {
+      row('Number', `to be drawn from round ${fmt(y.beacon.number.committed_drand_round)}`);
+    }
+
+    if (y.tower) {
+      row('Move', el('strong', { class: 'mono' }, y.tower.move), ` (move ${y.tower.number}), decided by ${DECIDED[y.tower.decided_by] ?? y.tower.decided_by}`);
+      row('Tally', el('span', { class: 'mono' }, Object.entries(y.tower.tally).map(([k, v]) => `${k}: ${v}`).join(' · ')));
+      row('Tower', el('span', { class: 'mono' }, `${y.tower.state_before} → ${y.tower.state_after}`), ` · ${fmt(y.tower.optimal_remaining)} optimal moves remaining`);
+      const tb = y.beacon.tiebreak;
+      row('Tie-break', sourceName(tb.source), ', ', beaconLink(tb), tb.randomness ? el('span', { class: 'hex' }, ` ${tb.randomness}`) : '');
+      if (tb.derivation) {
+        row('Tie-break derivation', `number mod ${tb.derivation.choices.length} = ${tb.derivation.index} → `, el('span', { class: 'mono' }, tb.derivation.choices.join(', ')), ` → ${tb.derivation.choices[tb.derivation.index]}`);
+      }
+    } else if (!y.closed_at) {
+      row('Move', 'votes are sealed until the close');
+    }
+    row('Seals', el('span', { class: 'mono small' }, Object.entries(y.seals.t).map(([k, v]) => `${k} T=${fmt(v)}`).join(' · ')), ` (${fmt(y.seals.benchmark.squaringsPerSecond)} squarings/s on ${y.seals.benchmark.cpu})`);
+    if (y.closed_at) row('Ledger', el('a', { href: `/api/ledger/${y.year}.json` }, `${y.year}.json`));
+
+    const verifyOut = el('p', { class: 'small dim', 'aria-live': 'polite' });
+    const actions: Node[] = [];
+    if (y.number && y.beacon.number.source === 'drand' && y.beacon.number.randomness) {
+      const btn = el('button', { type: 'button' }, 'Verify the Number in your browser');
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        verifyOut.textContent = 'Asking drand directly and checking the signature…';
+        try {
+          verifyOut.textContent = await verifyDrandInBrowser(y.beacon.number.committed_drand_round, y.beacon.number.randomness!);
+          verifyOut.className = 'small success';
+        } catch (e) {
+          verifyOut.textContent = `Could not verify: ${(e as Error).message}`;
+          verifyOut.className = 'small error';
+          btn.disabled = false;
+        }
+      });
+      actions.push(el('p', {}, btn), verifyOut);
+    }
+
+    const entries = el('details', {}, el('summary', {}, `The sealed guestbook: ${fmt(y.guestbook_count)} ${y.guestbook_count === 1 ? 'entry' : 'entries'}`));
+    let loaded = false;
+    entries.addEventListener('toggle', async () => {
+      if (loaded || !entries.open) return;
+      loaded = true;
+      const list = el('div', {}, el('p', { class: 'dim' }, 'Loading…'));
+      entries.append(list);
+      const { entries: rows } = await getJson<{ entries: Entry[] }>(`/api/guestbook?year=${y.year}`);
+      list.replaceChildren(
+        ...(rows.length
+          ? rows.map((e) =>
+              el(
+                'div',
+                { class: 'entry', id: `entry-${e.id}` },
+                el('header', {}, el('strong', {}, `#${e.id}`), el('span', {}, `${e.seal} seal`), el('span', { class: 'mono small dim' }, `T = ${fmt(e.t)}`), el('span', { class: 'small faint' }, utc(e.created_at))),
+                el('p', { class: 'small' }, 'Open it: ', el('code', {}, `rite-solver open ${e.id}`)),
+                el('details', {}, el('summary', { class: 'small' }, 'the puzzle'), el('p', { class: 'hex' }, `N = ${e.n_hex}`), el('p', { class: 'hex' }, `iv = ${e.iv_b64}`), el('p', { class: 'hex' }, `ciphertext = ${e.ciphertext_b64}`)),
+              ),
+            )
+          : [el('p', { class: 'dim' }, 'Nobody sealed a message this year.')]),
+      );
+    });
+
+    return el(
+      'section',
+      { class: 'panel year', id: `y${y.year}` },
+      el('h2', {}, `The Day of ${y.year}`, el('small', {}, y.closed_at ? 'closed' : 'open')),
+      y.number ? el('p', { class: 'eyebrow' }, 'The Number') : '',
+      y.number ? el('p', { class: 'big-number' }, fmt(y.number.decimal)) : '',
+      y.number ? el('p', { class: 'hex' }, y.number.hex) : '',
+      facts,
+      ...actions,
+      entries,
+    );
+  }
+
+  const years = $('#years');
+  years.replaceChildren(
+    ...(data.years.length
+      ? data.years.map(yearCard)
+      : [el('p', { class: 'center dim' }, 'Nothing is recorded yet. The first Day opens on 9 October 2026 at 10:00 UTC.')]),
+  );
+  if (location.hash) document.querySelector(location.hash)?.scrollIntoView();
+</script>

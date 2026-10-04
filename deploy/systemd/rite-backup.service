@@ -1,0 +1,17 @@
+# Copies the database to %h/backups/ (newest 30 kept). Started by
+# rite-backup.timer; the ledger repository is the long-term record.
+#
+# Logs, as root: journalctl _SYSTEMD_USER_UNIT=rite-backup.service
+
+[Unit]
+Description=The Annual Rite: back up the database
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/current/app
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+Environment=NODE_ENV=production
+Environment=DATA_DIR=%h/data
+EnvironmentFile=-%h/rite.env
+ExecStart=/usr/bin/env node build/server/cli.mjs backup %h/backups
+TimeoutStartSec=10min

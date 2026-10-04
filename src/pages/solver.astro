@@ -1,0 +1,94 @@
+---
+import Shrine from '../layouts/Shrine.astro';
+import { LEDGER_REPO_URL } from '../shared/site';
+---
+
+<Shrine title="The Solver" description="How to open a sealed guestbook entry: rite-solver squares a number trillions of times in a row, checkpointing as it goes.">
+  <section class="center">
+    <p class="eyebrow">Ritual II, the other side</p>
+    <h1>Opening a seal</h1>
+    <p class="dim lede">
+      Every entry in the guestbook can be opened by anyone. It costs nothing but time: one squaring after another, each
+      waiting for the last, trillions of times. Starting one is a commitment.
+    </p>
+  </section>
+
+  <section class="panel">
+    <h2>The ritual</h2>
+    <ol class="ritual">
+      <li>
+        <p>Get the solver. It is a small Rust program using GMP, kept in the <a href={LEDGER_REPO_URL}>public ledger</a> next to the rules.</p>
+        <pre><code>git clone {LEDGER_REPO_URL}.git
+cd {LEDGER_REPO_URL.split('/').pop()}/solver
+cargo build --release</code></pre>
+      </li>
+      <li>
+        <p>Choose an entry from the <a href="/archive/">archive</a> and begin.</p>
+        <pre><code>./target/release/rite-solver open 12</code></pre>
+        <p class="dim">
+          It fetches the entry, tells you what you are about to undertake, and waits for you to press Enter. Then it
+          squares. If this site is gone, read the entry from a ledger file instead:
+          <code>rite-solver open 12 --ledger ../ledger/2026.json</code>.
+        </p>
+      </li>
+      <li>
+        <p>Leave it running. Progress is written to <code>rite-checkpoints/</code> every 30 seconds and when you press
+        Ctrl-C. Run the same command again, on the same machine or a faster one years later, and it resumes.</p>
+      </li>
+      <li>
+        <p>When the last squaring is done, the solver hashes the result, decrypts, and prints the message. You will
+        likely be the first person ever to read it, including its author's future self.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section class="panel">
+    <h2>Why it cannot be hurried</h2>
+    <p>
+      An entry is an RSW time-lock puzzle (Rivest, Shamir and Wagner, 1996). Its key is
+      <span class="mono">2<sup>2<sup>T</sup></sup> mod N</span>, and the only known way to compute it without the
+      factors of N is to square 2 modulo N, T times in a row. Each step needs the previous one, so a thousand
+      computers are no faster than one. Only a faster one helps.
+    </p>
+    <p>
+      The writer's browser knew the two primes behind N, and took a shortcut through
+      <span class="mono">φ(N)</span> that turns trillions of squarings into a few thousand. Then it forgot them.
+    </p>
+    <p>
+      T is set each year by measuring how fast a fast desktop CPU squares 2048-bit numbers with GMP:
+      <code>rite-solver bench</code> prints the rate and the T it implies for each seal. Expect seals to fall early.
+      Rivest's LCS35 puzzle of 1999 was meant to take 35 years; it was solved in 2019, once on an ordinary CPU over
+      about three and a half years and once with an FPGA in about two months.
+    </p>
+    <p class="note">
+      None of this is quantum-safe. A large enough quantum computer could factor N with Shor's algorithm and open
+      every seal at once. That, too, is part of the Rite.
+    </p>
+  </section>
+
+  <section class="panel">
+    <h2>Opening by hand</h2>
+    <p>The format is plain, so any language with big integers will do. From the rules:</p>
+    <pre><code>x = 2
+repeat T times:  x = x² mod N
+K = SHA-256( x as big-endian bytes, left-padded to the byte length of N )
+message = AES-256-GCM-decrypt( key K, iv, ciphertext with its 16-byte tag, no AAD )</code></pre>
+  </section>
+</Shrine>
+
+<style>
+  .lede {
+    max-width: 36rem;
+    margin: 0 auto 2.5rem;
+  }
+  .ritual {
+    padding-left: 1.4rem;
+  }
+  .ritual li {
+    margin-bottom: 1.4rem;
+  }
+  .ritual li::marker {
+    color: var(--gold);
+    font-style: italic;
+  }
+</style>

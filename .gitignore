@@ -1,0 +1,17 @@
+node_modules/
+dist/
+build/
+.astro/
+
+# the local database (production keeps it in /srv/sites/rite/data)
+data/
+*.sqlite
+*.sqlite-*
+
+solver/target/
+rite-checkpoints/
+
+.env
+.env.*
+.DS_Store
+.idea/

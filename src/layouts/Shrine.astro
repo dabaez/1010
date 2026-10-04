@@ -1,0 +1,133 @@
+---
+import '@fontsource/cormorant-garamond/400.css';
+import '@fontsource/cormorant-garamond/500.css';
+import '@fontsource/cormorant-garamond/400-italic.css';
+import '@fontsource/ibm-plex-mono/400.css';
+import '@fontsource/ibm-plex-mono/500.css';
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  wide?: boolean;
+  bare?: boolean;
+}
+
+const {
+  title,
+  description = 'A website that opens for one day a year: a Tower of Hanoi moved one ring per year by vote, a guestbook sealed in time-lock puzzles, and a verifiable random number of the year.',
+  wide = false,
+  bare = false,
+} = Astro.props;
+const fullTitle = title ? `${title} · The Annual Rite` : 'The Annual Rite';
+const path = Astro.url.pathname;
+const nav = [
+  ['/', 'Shrine'],
+  ['/tower/', 'Tower'],
+  ['/archive/', 'Archive'],
+  ['/solver/', 'Solver'],
+  ['/rules/', 'Rules'],
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#0b0907" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+  </head>
+  <body>
+    {
+      !bare && (
+        <header class="site-header">
+          <a href="/" class="sigil" aria-label="The Annual Rite, home">
+            <span class="sigil-num">1010</span>
+            <span class="sigil-name">The Annual Rite</span>
+          </a>
+          <nav aria-label="Main">
+            {nav.map(([href, label]) => (
+              <a href={href} aria-current={path === href || (href !== '/' && path.startsWith(href!)) ? 'page' : undefined}>
+                {label}
+              </a>
+            ))}
+          </nav>
+        </header>
+      )
+    }
+    <main class:list={['wrap', { wide }]}>
+      <slot />
+    </main>
+    {
+      !bare && (
+        <footer class="site-footer wrap">
+          <p>
+            Open one day a year: October 10, for 50 hours, Anywhere on Earth.
+            <br />
+            The server's clock is the only authority.
+          </p>
+        </footer>
+      )
+    }
+  </body>
+</html>
+
+<style>
+  .site-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.1rem;
+    padding: 2.4rem 1rem 3rem;
+  }
+  .sigil {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: var(--ink);
+    gap: 0.15rem;
+  }
+  .sigil-num {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.6em;
+    padding-left: 0.6em;
+    color: var(--gold);
+  }
+  .sigil-name {
+    font-size: 1.05rem;
+    letter-spacing: 0.32em;
+    padding-left: 0.32em;
+    text-transform: uppercase;
+  }
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.2rem 1.4rem;
+    font-size: 1.02rem;
+  }
+  nav a {
+    color: var(--dim);
+    text-decoration: none;
+    font-style: italic;
+  }
+  nav a:hover,
+  nav a[aria-current='page'] {
+    color: var(--gold-2);
+  }
+  .site-footer {
+    text-align: center;
+    color: var(--faint);
+    font-size: 0.95rem;
+    font-style: italic;
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+</style>

@@ -1,0 +1,34 @@
+# The Annual Rite's server: API, pages, and the lazy open/close jobs.
+# A standalone service (no matching .timer), so receive-site enables and
+# restarts it on every deploy, rollback or activate.
+#
+# Secrets and keys live in %h/rite.env (KEY=value lines, chmod 600):
+#   TURNSTILE_SITE_KEY=...   TURNSTILE_SECRET=...
+#   LEDGER_REPO=dabaez/1010-ledger   LEDGER_TOKEN=...
+#
+# Logs, as root: journalctl _SYSTEMD_USER_UNIT=rite.service
+
+[Unit]
+Description=The Annual Rite (1010.b4ez.com)
+
+[Service]
+Type=simple
+WorkingDirectory=%h/current/app
+# node has to be installed system-wide, on this PATH.
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+Environment=NODE_ENV=production
+Environment=HOST=127.0.0.1
+Environment=PORT=8710
+# The database outlives releases.
+Environment=DATA_DIR=%h/data
+Environment=PUBLIC_DIR=%h/current/public
+# Only nginx can reach 127.0.0.1:8710, and it sets X-Real-IP.
+Environment=TRUST_PROXY=1
+Environment=SITE_URL=https://1010.b4ez.com
+EnvironmentFile=-%h/rite.env
+ExecStart=/usr/bin/env node build/server/main.mjs
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=default.target

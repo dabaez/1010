@@ -1,0 +1,342 @@
+/* The shrine: stone, candlelight, and numbers that do not hurry. */
+
+:root {
+  --bg: #0b0907;
+  --stone: #14110d;
+  --stone-2: #1b1712;
+  --line: #2e271e;
+  --line-2: #43392b;
+  --ink: #ece2cc;
+  --dim: #a39579;
+  --faint: #6f6553;
+  --gold: #dcae55;
+  --gold-2: #f3d593;
+  --ember: #c4572f;
+  --seal: #8f2f22;
+  --ok: #8fb07a;
+
+  --serif: 'Cormorant Garamond', 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  --mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+
+  --measure: 44rem;
+  --radius: 3px;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--bg);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse 70% 40% at 50% -5%, rgba(220, 174, 85, 0.13), transparent 70%),
+    radial-gradient(ellipse 50% 30% at 50% 105%, rgba(196, 87, 47, 0.06), transparent 70%),
+    var(--bg);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 1.22rem;
+  line-height: 1.55;
+  font-feature-settings: 'onum' 1, 'liga' 1;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: var(--gold);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+a:hover {
+  color: var(--gold-2);
+}
+
+::selection {
+  background: rgba(220, 174, 85, 0.35);
+}
+
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+  margin: 0 0 0.6em;
+}
+h1 {
+  font-size: clamp(2.3rem, 6vw, 3.4rem);
+}
+h2 {
+  font-size: 1.9rem;
+}
+h3 {
+  font-size: 1.35rem;
+}
+
+p {
+  margin: 0 0 1em;
+}
+
+code,
+kbd,
+pre,
+.mono {
+  font-family: var(--mono);
+  font-feature-settings: 'zero' 1;
+}
+code {
+  font-size: 0.82em;
+  background: var(--stone-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.05em 0.35em;
+  overflow-wrap: anywhere;
+}
+pre {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  background: var(--stone);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+  overflow-x: auto;
+}
+pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: inherit;
+}
+
+hr {
+  border: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--line-2), transparent);
+  margin: 3rem 0;
+}
+
+/* ---------------------------------------------------------------- layout */
+
+.wrap {
+  width: 100%;
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+.wrap.wide {
+  max-width: 62rem;
+}
+
+.small-caps {
+  font-variant: small-caps;
+  letter-spacing: 0.14em;
+  text-transform: lowercase;
+}
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.dim {
+  color: var(--dim);
+}
+.faint {
+  color: var(--faint);
+}
+.center {
+  text-align: center;
+}
+
+.numeral {
+  font-family: var(--serif);
+  font-style: italic;
+  color: var(--gold);
+  font-size: 1.1em;
+  margin-right: 0.4em;
+}
+
+/* ---------------------------------------------------------------- panels */
+
+.panel {
+  position: relative;
+  background: linear-gradient(180deg, var(--stone-2), var(--stone));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: clamp(1.25rem, 4vw, 2rem);
+  margin: 0 0 2rem;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.02) inset, 0 20px 40px -30px rgba(0, 0, 0, 0.9);
+}
+.panel::before {
+  /* the gilt line along the top */
+  content: '';
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  top: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(220, 174, 85, 0.55), transparent);
+}
+.panel > h2:first-child,
+.panel > header:first-child {
+  margin-top: 0;
+}
+
+.stat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 2rem;
+  font-size: 1.05rem;
+}
+.stat-row strong {
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: 0.95em;
+  color: var(--ink);
+}
+
+/* ---------------------------------------------------------------- buttons */
+
+button,
+.button {
+  font: inherit;
+  font-size: 1.05rem;
+  color: var(--ink);
+  background: var(--stone-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  padding: 0.55rem 1.2rem;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    color 0.2s;
+  text-decoration: none;
+  display: inline-block;
+}
+button:hover:not(:disabled),
+.button:hover {
+  border-color: var(--gold);
+  color: var(--gold-2);
+}
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+button.primary {
+  background: linear-gradient(180deg, #3a2c15, #261c0d);
+  border-color: #6d5428;
+  color: var(--gold-2);
+}
+button.primary:hover:not(:disabled) {
+  border-color: var(--gold-2);
+}
+
+/* ---------------------------------------------------------------- forms */
+
+textarea {
+  width: 100%;
+  min-height: 9rem;
+  resize: vertical;
+  font: inherit;
+  font-size: 1.1rem;
+  color: var(--ink);
+  background: #0e0c09;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  padding: 0.8rem 0.9rem;
+}
+textarea:focus {
+  border-color: var(--gold);
+  outline: none;
+}
+
+.note {
+  font-size: 0.98rem;
+  color: var(--dim);
+  border-left: 2px solid var(--line-2);
+  padding-left: 0.9rem;
+  margin: 1rem 0;
+}
+
+.error {
+  color: #e08a6a;
+}
+.success {
+  color: var(--ok);
+}
+
+/* ---------------------------------------------------------------- tables */
+
+.table-scroll {
+  overflow-x: auto;
+  margin: 0 0 1.5rem;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.98rem;
+}
+th,
+td {
+  text-align: left;
+  padding: 0.45rem 0.7rem 0.45rem 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+th {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+td.mono {
+  font-size: 0.85rem;
+}
+
+.hex {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--dim);
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
+/* ---------------------------------------------------------------- misc */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

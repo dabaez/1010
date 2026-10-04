@@ -1,0 +1,318 @@
+---
+import Shrine from '../layouts/Shrine.astro';
+---
+
+<Shrine>
+  <noscript>
+    <p class="note">The shrine needs JavaScript to keep time with the server and to seal messages in your browser.</p>
+  </noscript>
+
+  <!-- The hero changes with the phase: a countdown while sealed, the opening ceremony on the Day. -->
+  <section id="hero" class="hero center" data-phase="loading" aria-live="polite">
+    <p class="eyebrow" id="hero-eyebrow">&nbsp;</p>
+    <h1 id="hero-title">The shrine</h1>
+
+    <div id="ceremony" class="ceremony" hidden>
+      <p class="eyebrow">The Number of <span data-year></span></p>
+      <p class="number mono" id="number-dec" aria-label="The Number of the year">&nbsp;</p>
+      <p class="number-hex mono" id="number-hex">&nbsp;</p>
+      <div class="bit-row">
+        <span class="eyebrow">The Bit</span>
+        <span class="bit mono" id="bit">·</span>
+      </div>
+      <p class="dim small" id="ceremony-source">&nbsp;</p>
+    </div>
+
+    <div class="countdown mono" id="countdown" role="timer" aria-live="off">
+      <div><span data-u="d">--</span><small>days</small></div>
+      <div><span data-u="h">--</span><small>hours</small></div>
+      <div><span data-u="m">--</span><small>minutes</small></div>
+      <div><span data-u="s">--</span><small>seconds</small></div>
+    </div>
+    <p id="hero-sub" class="dim">&nbsp;</p>
+  </section>
+
+  <section class="panel" id="tower-panel" aria-labelledby="tower-h">
+    <h2 id="tower-h"><span class="numeral">I</span>The Tower</h2>
+    <p class="dim">
+      Twelve rings, three pegs. Each Day the visitors vote and exactly one ring moves. When all twelve stand on C,
+      programming is over. Played perfectly that takes 4,095 years: the year 6121 at the earliest.
+    </p>
+    <svg id="tower-svg" class="tower-svg"></svg>
+    <p class="stat-row">
+      <span>Moves made: <strong id="moves-made">–</strong>.</span>
+      <span>Optimal moves remaining: <strong id="optimal-remaining">–</strong>.</span>
+    </p>
+
+    <div id="ballot" hidden>
+      <hr class="thin" />
+      <h3>The ballot of <span data-year></span></h3>
+      <p class="dim">
+        These are the only legal moves. Votes stay hidden until the window closes; then the move with the most votes
+        is made. Nothing here tells you which move is wise. The crowd is on its own.
+      </p>
+      <div class="moves" id="moves" role="radiogroup" aria-label="Legal moves"></div>
+      <div class="captcha" id="vote-captcha"></div>
+      <p><button class="primary" id="vote-button" disabled>Cast your vote</button></p>
+      <p id="vote-status" class="status" aria-live="polite"></p>
+    </div>
+    <p><a href="/tower/">The full history of moves →</a></p>
+  </section>
+
+  <section class="panel" id="guestbook-panel" aria-labelledby="gb-h">
+    <h2 id="gb-h"><span class="numeral">II</span>The Sealed Guestbook</h2>
+    <p class="dim">
+      Each message is sealed in your browser inside a time-lock puzzle. Anyone can open it, but only by squaring a number
+      over and over, trillions of times in a row. More computers do not help; only a faster one does. It is not
+      quantum-safe: a large enough quantum computer would open every seal at once.
+    </p>
+
+    <div id="gb-closed">
+      <p><strong id="gb-count">–</strong> <span id="gb-count-label">entries</span> sealed so far. The guestbook opens on the Day.</p>
+    </div>
+
+    <form id="gb-form" hidden>
+      <label for="gb-text" class="eyebrow">Your message</label>
+      <textarea id="gb-text" maxlength="4000" placeholder="To whoever opens this…"></textarea>
+      <p class="counter mono small"><span id="gb-chars">0</span> / 1,000</p>
+
+      <fieldset class="seals">
+        <legend class="eyebrow">Choose a seal</legend>
+        <label class="seal-option"><input type="radio" name="seal" value="short" checked /><span><strong>Short</strong><em>about 1 year</em><code data-t="short"></code></span></label>
+        <label class="seal-option"><input type="radio" name="seal" value="decade" /><span><strong>Decade</strong><em>about 10 years</em><code data-t="decade"></code></span></label>
+        <label class="seal-option"><input type="radio" name="seal" value="century" /><span><strong>Century</strong><em>about 100 years</em><code data-t="century"></code></span></label>
+      </fieldset>
+      <p class="small faint" id="gb-bench"></p>
+
+      <p class="note">
+        Nobody can read the entries, including us, so they cannot be moderated. Only ciphertext ever leaves your
+        browser. One entry per person per year, up to 1,000 characters. Seals tend to fall early as computers get faster.
+      </p>
+      <div class="captcha" id="gb-captcha"></div>
+      <p><button class="primary" id="gb-button" type="submit">Seal it</button></p>
+      <ol class="steps small" id="gb-steps" hidden></ol>
+      <p id="gb-status" class="status" aria-live="polite"></p>
+    </form>
+    <p><a href="/archive/">The archive of sealed entries →</a> · <a href="/solver/">How to open one →</a></p>
+  </section>
+
+  <section class="panel" id="number-panel" aria-labelledby="num-h">
+    <h2 id="num-h"><span class="numeral">III</span>The Number and the Bit</h2>
+    <p class="dim">
+      Each Day has a random number and a random bit, taken from the drand beacon run by the League of Entropy. We do
+      not choose them: the round that decides them is published a year in advance, and anyone can check it.
+    </p>
+    <div id="number-details"></div>
+    <p><a href="/archive/">Every year's Number and Bit →</a></p>
+  </section>
+</Shrine>
+
+<style>
+  .hero {
+    padding: 1rem 0 3.5rem;
+  }
+  .hero h1 {
+    margin-bottom: 1.6rem;
+  }
+  .countdown {
+    display: flex;
+    justify-content: center;
+    gap: clamp(0.7rem, 4vw, 2.4rem);
+    margin: 0 auto 1.4rem;
+  }
+  .countdown div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 3.2ch;
+  }
+  .countdown span {
+    font-size: clamp(2.4rem, 10vw, 4.4rem);
+    line-height: 1;
+    color: var(--gold-2);
+    font-weight: 400;
+    text-shadow: 0 0 28px rgba(220, 174, 85, 0.25);
+    font-variant-numeric: tabular-nums;
+  }
+  .countdown small {
+    font-size: 0.66rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-top: 0.6rem;
+  }
+  .hero[data-phase='open'] .countdown span {
+    font-size: clamp(1.4rem, 6vw, 2.2rem);
+    color: var(--ink);
+    text-shadow: none;
+  }
+  .ceremony {
+    margin: 0 auto 2.4rem;
+  }
+  .number {
+    font-size: clamp(1.15rem, 5.6vw, 2.5rem);
+    white-space: nowrap;
+    color: var(--gold-2);
+    letter-spacing: 0.02em;
+    margin: 0.4rem 0 0.2rem;
+    text-shadow: 0 0 36px rgba(220, 174, 85, 0.35);
+    font-variant-numeric: tabular-nums;
+  }
+  .number.drawing {
+    color: var(--dim);
+    text-shadow: none;
+  }
+  .number-hex {
+    color: var(--dim);
+    font-size: 0.95rem;
+    margin-bottom: 1.2rem;
+  }
+  .bit-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    border: 1px solid var(--line-2);
+    border-radius: 999px;
+    padding: 0.35rem 0.6rem 0.35rem 1.2rem;
+    margin-bottom: 1rem;
+  }
+  .bit {
+    display: inline-grid;
+    place-items: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #4a3a1c, #1a140b);
+    border: 1px solid #6d5428;
+    color: var(--gold-2);
+    font-size: 1.4rem;
+  }
+  .small {
+    font-size: 0.95rem;
+  }
+  .tower-svg {
+    width: 100%;
+    height: auto;
+    display: block;
+    margin: 0.5rem 0 1rem;
+  }
+  hr.thin {
+    margin: 1.8rem 0;
+  }
+  .moves {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    margin: 1rem 0;
+  }
+  .moves :global(button) {
+    font-family: var(--mono);
+    font-size: 1.1rem;
+    padding: 0.6rem 1.3rem;
+  }
+  .moves :global(button[aria-checked='true']) {
+    border-color: var(--gold);
+    color: var(--gold-2);
+    background: #2a2010;
+  }
+  .status:empty {
+    display: none;
+  }
+  .captcha:empty {
+    display: none;
+  }
+  .captcha {
+    margin: 1rem 0;
+  }
+  .counter {
+    text-align: right;
+    color: var(--faint);
+    margin: 0.2rem 0 1rem;
+  }
+  .counter.over {
+    color: #e08a6a;
+  }
+  .seals {
+    border: 0;
+    padding: 0;
+    margin: 0 0 0.6rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 0.7rem;
+  }
+  .seals legend {
+    margin-bottom: 0.6rem;
+  }
+  .seal-option {
+    cursor: pointer;
+  }
+  .seal-option input {
+    position: absolute;
+    opacity: 0;
+  }
+  .seal-option span {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    border: 1px solid var(--line-2);
+    border-radius: var(--radius);
+    padding: 0.7rem 0.9rem;
+    transition: border-color 0.2s;
+  }
+  .seal-option em {
+    color: var(--dim);
+    font-size: 0.95rem;
+  }
+  .seal-option code {
+    background: none;
+    border: 0;
+    padding: 0;
+    color: var(--faint);
+    font-size: 0.7rem;
+  }
+  .seal-option input:checked + span {
+    border-color: var(--gold);
+    background: #1f180d;
+  }
+  .seal-option input:focus-visible + span {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+  }
+  .steps {
+    color: var(--dim);
+    padding-left: 1.3rem;
+  }
+  .steps :global(li.done) {
+    color: var(--ok);
+  }
+  .steps :global(li.active) {
+    color: var(--gold-2);
+  }
+  #number-details :global(dl) {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.35rem 1.2rem;
+    margin: 0 0 1rem;
+  }
+  #number-details :global(dt) {
+    color: var(--dim);
+  }
+  #number-details :global(dd) {
+    margin: 0;
+    min-width: 0;
+  }
+  @media (max-width: 34rem) {
+    #number-details :global(dl) {
+      grid-template-columns: 1fr;
+      gap: 0.1rem;
+    }
+    #number-details :global(dd) {
+      margin-bottom: 0.6rem;
+    }
+  }
+</style>
+
+<script>
+  import { mountHome } from '../scripts/home';
+  mountHome();
+</script>
