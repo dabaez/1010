@@ -1,4 +1,5 @@
 ---
+import Ballot from '../components/Ballot.astro';
 import Shrine from '../layouts/Shrine.astro';
 ---
 
@@ -22,6 +23,7 @@ import Shrine from '../layouts/Shrine.astro';
       <label for="replay-range" class="eyebrow">Repetición: después de <span id="replay-label">–</span></label>
       <input type="range" id="replay-range" min="0" max="0" value="0" step="1" />
     </div>
+    <Ballot />
   </section>
 
   <section>
@@ -35,12 +37,11 @@ import Shrine from '../layouts/Shrine.astro';
             <th>Movimiento</th>
             <th>Votos</th>
             <th>Decidido por</th>
-            <th>Estado después</th>
             <th>Óptimos restantes</th>
           </tr>
         </thead>
         <tbody id="history">
-          <tr><td colspan="7" class="dim">Cargando…</td></tr>
+          <tr><td colspan="6" class="dim">Cargando…</td></tr>
         </tbody>
       </table>
     </div>
@@ -77,9 +78,10 @@ import Shrine from '../layouts/Shrine.astro';
 </style>
 
 <script>
-  import { $, el, fmt, getJson } from '../scripts/api';
+  import { $, el, fetchState, fmt, getJson } from '../scripts/api';
+  import { createBallot } from '../scripts/ballot';
   import { drawTower } from '../scripts/tower-draw';
-  import { START_STATE } from '../shared/tower';
+  import { START_STATE, applyMove, parseMove } from '../shared/tower';
 
   interface MoveView {
     year: number;
@@ -104,13 +106,27 @@ import Shrine from '../layouts/Shrine.astro';
   const t = await getJson<TowerResponse>('/api/tower');
   const svg = document.querySelector<SVGSVGElement>('#tower-svg')!;
   drawTower(svg, t.state);
+
+  // On the Day, the ballot is here too. Choosing a move shows it on today's tower.
+  const ballot = createBallot({
+    refresh: async () => ballot.render(await fetchState()),
+    onSelect: (move) => {
+      const range = document.querySelector<HTMLInputElement>('#replay-range');
+      if (range) {
+        range.value = range.max;
+        range.dispatchEvent(new Event('input'));
+      }
+      drawTower(svg, t.state, { preview: move ? applyMove(t.state, parseMove(move)!) : null });
+    },
+  });
+  ballot.render(await fetchState());
   $('#state').textContent = t.state;
   $('#moves-made').textContent = fmt(t.movesMade);
   $('#optimal-remaining').textContent = fmt(t.optimalRemaining);
 
   const body = $('#history');
   if (!t.history.length) {
-    body.replaceChildren(el('tr', {}, el('td', { colspan: '7', class: 'dim' }, 'Aún no se ha hecho ningún movimiento. El primero se hace al cierre del primer Día.')));
+    body.replaceChildren(el('tr', {}, el('td', { colspan: '6', class: 'dim' }, 'Aún no se ha hecho ningún movimiento. El primero se hace al cierre del primer Día.')));
   } else {
     body.replaceChildren(
       ...[...t.history].reverse().map((m) =>
@@ -122,7 +138,6 @@ import Shrine from '../layouts/Shrine.astro';
           el('td', { class: 'mono' }, m.move),
           el('td', { class: 'mono' }, Object.entries(m.tally).map(([k, v]) => `${k} ${v}`).join(' · ')),
           el('td', {}, DECIDED[m.decided_by] ?? m.decided_by),
-          el('td', { class: 'mono' }, m.state_after),
           el('td', { class: 'mono' }, fmt(m.optimal_remaining)),
         ),
       ),

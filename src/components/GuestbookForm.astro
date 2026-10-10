@@ -1,0 +1,102 @@
+---
+// Sealing a guestbook message, shown only while the Day is open.
+// src/scripts/gb-form.ts drives it; the temple and the guestbook page both
+// include it.
+---
+
+<form id="gb-form" hidden>
+  <label for="gb-name" class="eyebrow">Tu nombre (opcional)</label>
+  <input id="gb-name" type="text" maxlength="40" autocomplete="nickname" placeholder="Anónimo" />
+  <p class="small faint name-note">El nombre no se sella: se ve junto al mensaje desde hoy.</p>
+
+  <label for="gb-text" class="eyebrow">Tu mensaje</label>
+  <textarea id="gb-text" maxlength="4000" placeholder="Para quien abra esto…"></textarea>
+  <p class="counter mono small"><span id="gb-chars">0</span> / 1.000</p>
+
+  <fieldset class="seals">
+    <legend class="eyebrow">Tu sello</legend>
+    <label class="seal-option"><input type="radio" name="seal" value="short" checked /><span><strong>Corto</strong><em>cerca de 1 año</em></span></label>
+    <label class="seal-option"><input type="radio" name="seal" value="decade" /><span><strong>Década</strong><em>cerca de 10 años</em></span></label>
+    <label class="seal-option"><input type="radio" name="seal" value="century" /><span><strong>Siglo</strong><em>cerca de 100 años</em></span></label>
+  </fieldset>
+
+  <p class="note">Nadie puede leer los mensajes, ni siquiera nosotros. Un mensaje por persona al año.</p>
+  <div class="captcha" id="gb-captcha"></div>
+  <p><button class="primary" id="gb-button" type="submit">Sellar</button></p>
+  <p id="gb-status" class="status" aria-live="polite"></p>
+</form>
+
+<style>
+  #gb-name {
+    width: 100%;
+    font: inherit;
+    font-size: 1.1rem;
+    color: var(--ink);
+    background: #0e0c09;
+    border: 1px solid var(--line-2);
+    border-radius: var(--radius);
+    padding: 0.55rem 0.9rem;
+    margin-top: 0.3rem;
+  }
+  #gb-name:focus {
+    border-color: var(--gold);
+    outline: none;
+  }
+  .name-note {
+    margin: 0.3rem 0 1.4rem;
+  }
+  .counter {
+    text-align: right;
+    color: var(--faint);
+    margin: 0.2rem 0 1rem;
+  }
+  .counter.over {
+    color: #e08a6a;
+  }
+  .seals {
+    border: 0;
+    padding: 0;
+    margin: 0 0 0.6rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 0.7rem;
+  }
+  .seals legend {
+    margin-bottom: 0.6rem;
+  }
+  .seal-option {
+    cursor: pointer;
+  }
+  .seal-option input {
+    position: absolute;
+    opacity: 0;
+  }
+  .seal-option span {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    border: 1px solid var(--line-2);
+    border-radius: var(--radius);
+    padding: 0.7rem 0.9rem;
+    transition: border-color 0.2s;
+  }
+  .seal-option em {
+    color: var(--dim);
+    font-size: 0.95rem;
+  }
+  .seal-option input:checked + span {
+    border-color: var(--gold);
+    background: #1f180d;
+  }
+  .seal-option input:focus-visible + span {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+  }
+  .status:empty,
+  .captcha:empty {
+    display: none;
+  }
+  .captcha {
+    margin: 1rem 0;
+  }
+</style>

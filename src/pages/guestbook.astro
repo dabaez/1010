@@ -1,4 +1,5 @@
 ---
+import GuestbookForm from '../components/GuestbookForm.astro';
 import Shrine from '../layouts/Shrine.astro';
 ---
 
@@ -6,7 +7,11 @@ import Shrine from '../layouts/Shrine.astro';
   <section class="center">
     <p class="eyebrow" id="gb-year">&nbsp;</p>
     <h1>Libro de visitas</h1>
-    <p class="dim lede" id="gb-status">&nbsp;</p>
+    <p class="dim lede" id="gb-intro">&nbsp;</p>
+  </section>
+
+  <section class="panel" id="gb-write" hidden>
+    <GuestbookForm />
   </section>
 
   <section class="panel">
@@ -25,23 +30,27 @@ import Shrine from '../layouts/Shrine.astro';
 
 <script>
   import { $, el, fetchState, fmt, getJson, utc } from '../scripts/api';
+  import { createGuestbookForm } from '../scripts/gb-form';
   import { renderEntries, type Entry } from '../scripts/year-view';
 
-  const state = await fetchState();
-  const { year, entries } = await getJson<{ year: number | null; entries: Entry[] }>('/api/guestbook');
+  const form = createGuestbookForm(render);
+  await render();
 
-  if (year === null) {
-    $('#gb-year').textContent = `El Día de ${state.window.year}`;
-    $('#gb-status').textContent = `Se abre el ${utc(state.window.opensAt)}.`;
-    $('#gb-entries').replaceChildren(el('p', { class: 'dim' }, 'Aún no hay mensajes.'));
-  } else {
-    $('#gb-year').textContent = `El Día de ${year}`;
-    const status = $('#gb-status');
+  async function render(): Promise<void> {
+    const state = await fetchState();
+    const { year, entries } = await getJson<{ year: number | null; entries: Entry[] }>('/api/guestbook');
+    const intro = $('#gb-intro');
+    $('#gb-year').textContent = `El Día de ${year ?? state.window.year}`;
+
     if (state.phase === 'open') {
-      status.replaceChildren('Abierto hasta el ', utc(state.window.closesAt), '. ', el('a', { href: '/' }, 'Deja tu mensaje en el templo.'));
+      intro.replaceChildren('Abierto hasta el ', utc(state.window.closesAt), '.', el('br'), 'Deja tu mensaje aquí abajo.');
+    } else if (year === null) {
+      intro.textContent = `Se abre el ${utc(state.window.opensAt)}.`;
     } else {
-      status.textContent = `${fmt(entries.length)} ${entries.length === 1 ? 'mensaje sellado' : 'mensajes sellados'}. Vuelve a abrirse el ${utc(state.window.opensAt)}.`;
+      intro.textContent = `${fmt(entries.length)} ${entries.length === 1 ? 'mensaje sellado' : 'mensajes sellados'}. Vuelve a abrirse el ${utc(state.window.opensAt)}.`;
     }
-    $('#gb-entries').replaceChildren(renderEntries(entries));
+    $('#gb-write').hidden = state.phase !== 'open';
+    form.render(state);
+    $('#gb-entries').replaceChildren(year === null ? el('p', { class: 'dim' }, 'Aún no hay mensajes.') : renderEntries(entries));
   }
 </script>

@@ -1,29 +1,29 @@
 // The shrine page: countdown by the server's clock, the opening ceremony,
-// the ballot, and sealing guestbook entries in the browser.
+// the ballot and the guestbook form (shared with their own pages), and the
+// Number.
 
 import { drandRoundUrl } from '../shared/beacon';
-import { MAX_MESSAGE_CHARS, messageLength, seal } from '../shared/timelock';
 import { applyMove, parseMove } from '../shared/tower';
-import { $, el, fetchState, fmt, pad, postJson, serverNow, splitDuration, utc, type StateResponse } from './api';
-import { mountCaptcha, type CaptchaWidget } from './captcha';
+import { $, el, fetchState, fmt, pad, serverNow, splitDuration, utc, type StateResponse } from './api';
+import { createBallot, type Ballot } from './ballot';
+import { createGuestbookForm, type GuestbookForm } from './gb-form';
 import { drawTower } from './tower-draw';
 import { verifyDrandInBrowser } from './verify';
 
 let state: StateResponse | null = null;
-let selectedMove: string | null = null;
-let voteCaptcha: Promise<CaptchaWidget> | null = null;
-let gbCaptcha: Promise<CaptchaWidget> | null = null;
+let ballot: Ballot;
+let gbForm: GuestbookForm;
 let shownNumber: string | null = null;
 let rolling: number | null = null;
 let refreshing = false;
 let lastBoundaryRefresh = 0;
 
 export function mountHome(): void {
+  ballot = createBallot({ refresh, onSelect: () => state && renderTower(state) });
+  gbForm = createGuestbookForm(refresh);
   void refresh();
   setInterval(tickClock, 250);
   setInterval(() => void refresh(), 30_000);
-  wireBallot();
-  wireGuestbook();
 }
 
 async function refresh(): Promise<void> {
@@ -181,155 +181,19 @@ function settleDigits(target: HTMLElement, final: string): void {
 
 function renderTower(s: StateResponse): void {
   const svg = document.querySelector<SVGSVGElement>('#tower-svg')!;
-  const preview = selectedMove ? applyMove(s.tower.state, parseMove(selectedMove)!) : null;
-  drawTower(svg, s.tower.state, { preview });
+  const move = ballot.selected();
+  drawTower(svg, s.tower.state, { preview: move ? applyMove(s.tower.state, parseMove(move)!) : null });
   $('#moves-made').textContent = fmt(s.tower.movesMade);
   $('#optimal-remaining').textContent = fmt(s.tower.optimalRemaining);
-
-  const ballot = $('#ballot');
-  ballot.hidden = s.phase !== 'open';
-  if (s.phase !== 'open') return;
-
-  const moves = $('#moves');
-  const voted = s.you?.vote ?? null;
-  if (moves.dataset.for !== s.tower.ballot.join() + voted) {
-    moves.dataset.for = s.tower.ballot.join() + voted;
-    moves.replaceChildren(
-      ...s.tower.ballot.map((m) => {
-        const b = el('button', { type: 'button', role: 'radio', 'aria-checked': String(m === (voted ?? selectedMove)) }, m);
-        b.disabled = !!voted;
-        b.addEventListener('click', () => {
-          selectedMove = m;
-          moves.querySelectorAll('button').forEach((x) => x.setAttribute('aria-checked', String(x.textContent === m)));
-          ($('#vote-button') as HTMLButtonElement).disabled = false;
-          renderTower(state!);
-        });
-        return b;
-      }),
-    );
-  }
-  const button = $('#vote-button') as HTMLButtonElement;
-  const status = $('#vote-status');
-  if (voted) {
-    button.hidden = true;
-    status.className = 'status success';
-    status.textContent = `Tu voto, ${voted}, queda sellado hasta el cierre.`;
-  } else {
-    button.disabled = !selectedMove;
-    voteCaptcha ??= mountCaptcha($('#vote-captcha'), s.captcha?.siteKey ?? null);
-  }
+  ballot.render(s);
 }
-
-function wireBallot(): void {
-  const button = $('#vote-button') as HTMLButtonElement;
-  const status = $('#vote-status');
-  button.addEventListener('click', async () => {
-    if (!selectedMove || !voteCaptcha) return;
-    button.disabled = true;
-    status.className = 'status dim';
-    status.textContent = 'Esperando el captcha…';
-    try {
-      const captcha = await voteCaptcha;
-      const token = await captcha.token();
-      status.textContent = 'Votando…';
-      const r = await postJson('/api/vote', { move: selectedMove, captcha: token });
-      captcha.reset();
-      if (r.status === 200) {
-        selectedMove = null;
-        await refresh();
-      } else {
-        status.className = 'status error';
-        status.textContent = r.data?.error ?? `Algo salió mal (HTTP ${r.status}).`;
-        button.disabled = false;
-        if (r.status === 409 || r.status === 423) await refresh();
-      }
-    } catch (e) {
-      status.className = 'status error';
-      status.textContent = (e as Error).message;
-      button.disabled = false;
-    }
-  });
-}
-
-// ------------------------------------------------------------------ guestbook
 
 function renderGuestbook(s: StateResponse): void {
   const count = s.year && s.year.year === s.window.year ? s.year.guestbookCount : 0;
   $('#gb-count').textContent = fmt(count);
   $('#gb-count-label').textContent = count === 1 ? 'mensaje sellado' : 'mensajes sellados';
-  const open = s.phase === 'open';
-  $('#gb-closed').hidden = open;
-  const form = $('#gb-form');
-  form.hidden = !open;
-  if (!open) return;
-  const button = $('#gb-button') as HTMLButtonElement;
-  const status = $('#gb-status');
-  if (s.you?.signed && !status.dataset.sealedId) {
-    button.hidden = true;
-    ($('#gb-text') as HTMLTextAreaElement).disabled = true;
-    ($('#gb-name') as HTMLInputElement).disabled = true;
-    status.className = 'status success';
-    status.textContent = 'Ya sellaste tu mensaje de este año.';
-  } else if (!s.you?.signed) {
-    gbCaptcha ??= mountCaptcha($('#gb-captcha'), s.captcha?.siteKey ?? null);
-  }
-}
-
-function wireGuestbook(): void {
-  const form = $('#gb-form') as HTMLFormElement;
-  const text = $('#gb-text') as HTMLTextAreaElement;
-  const chars = $('#gb-chars');
-  const counter = chars.parentElement!;
-  const button = $('#gb-button') as HTMLButtonElement;
-  const status = $('#gb-status');
-
-  text.addEventListener('input', () => {
-    const n = messageLength(text.value);
-    chars.textContent = fmt(n);
-    counter.classList.toggle('over', n > MAX_MESSAGE_CHARS);
-  });
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (!state || !gbCaptcha) return;
-    const message = text.value;
-    const n = messageLength(message);
-    if (n === 0 || n > MAX_MESSAGE_CHARS) {
-      status.className = 'status error';
-      status.textContent = n === 0 ? 'Escribe algo primero.' : `Son ${fmt(n)} caracteres; el límite es 1.000.`;
-      return;
-    }
-    const sealName = (form.querySelector('input[name="seal"]:checked') as HTMLInputElement).value as keyof StateResponse['seals'];
-    const t = state.seals[sealName].t;
-    button.disabled = true;
-    text.disabled = true;
-    status.className = 'status dim';
-    status.textContent = 'Sellando…';
-    try {
-      const captcha = await gbCaptcha;
-      const token = await captcha.token();
-      const sealed = await seal(message, BigInt(t));
-      const name = ($('#gb-name') as HTMLInputElement).value.trim() || null;
-      const r = await postJson('/api/guestbook', { seal: sealName, name, ...sealed, captcha: token });
-      captcha.reset();
-      if (r.status === 200) {
-        text.value = '';
-        chars.textContent = '0';
-        status.dataset.sealedId = String(r.data.id);
-        status.className = 'status success';
-        status.textContent = `Sellado como el mensaje #${r.data.id}.`;
-        button.hidden = true;
-        await refresh();
-      } else {
-        throw new Error(r.data?.error ?? `Algo salió mal (HTTP ${r.status}).`);
-      }
-    } catch (err) {
-      status.className = 'status error';
-      status.textContent = (err as Error).message;
-      button.disabled = false;
-      text.disabled = false;
-    }
-  });
+  $('#gb-closed').hidden = s.phase === 'open';
+  gbForm.render(s);
 }
 
 // ------------------------------------------------------------------ number panel

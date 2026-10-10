@@ -1,0 +1,43 @@
+---
+// The tower ballot, shown only while the Day is open. src/scripts/ballot.ts
+// drives it; the temple and the tower page both include it.
+---
+
+<div id="ballot" hidden>
+  <hr class="thin" />
+  <h3>La votación de <span class="ballot-year"></span></h3>
+  <p class="dim">Los votos se revelan al cierre. Gana el movimiento con más votos.</p>
+  <div class="moves" id="moves" role="radiogroup" aria-label="Movimientos legales"></div>
+  <div class="captcha" id="vote-captcha"></div>
+  <p><button class="primary" id="vote-button" disabled>Votar</button></p>
+  <p id="vote-status" class="status" aria-live="polite"></p>
+</div>
+
+<style>
+  hr.thin {
+    margin: 1.8rem 0;
+  }
+  .moves {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    margin: 1rem 0;
+  }
+  .moves :global(button) {
+    font-family: var(--mono);
+    font-size: 1.1rem;
+    padding: 0.6rem 1.3rem;
+  }
+  .moves :global(button[aria-checked='true']) {
+    border-color: var(--gold);
+    color: var(--gold-2);
+    background: #2a2010;
+  }
+  .status:empty,
+  .captcha:empty {
+    display: none;
+  }
+  .captcha {
+    margin: 1rem 0;
+  }
+</style>

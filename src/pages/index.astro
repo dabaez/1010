@@ -1,4 +1,6 @@
 ---
+import Ballot from '../components/Ballot.astro';
+import GuestbookForm from '../components/GuestbookForm.astro';
 import Shrine from '../layouts/Shrine.astro';
 ---
 
@@ -34,55 +36,24 @@ import Shrine from '../layouts/Shrine.astro';
 
   <section class="panel" id="tower-panel" aria-labelledby="tower-h">
     <h2 id="tower-h"><span class="numeral">I</span>La Torre</h2>
+    <p><a href="/tower/">Historia de movimientos →</a></p>
     <p class="dim">Doce anillos que deben pasar de A a C. Cada Día se mueve uno, por votación.</p>
     <svg id="tower-svg" class="tower-svg"></svg>
     <p class="stat-row">
       <span>Movimientos hechos: <strong id="moves-made">–</strong>.</span>
       <span>Movimientos óptimos restantes: <strong id="optimal-remaining">–</strong>.</span>
     </p>
-
-    <div id="ballot" hidden>
-      <hr class="thin" />
-      <h3>La votación de <span data-year></span></h3>
-      <p class="dim">Los votos se revelan al cierre. Gana el movimiento con más votos.</p>
-      <div class="moves" id="moves" role="radiogroup" aria-label="Movimientos legales"></div>
-      <div class="captcha" id="vote-captcha"></div>
-      <p><button class="primary" id="vote-button" disabled>Votar</button></p>
-      <p id="vote-status" class="status" aria-live="polite"></p>
-    </div>
-    <p><a href="/tower/">Historia de movimientos →</a></p>
+    <Ballot />
   </section>
 
   <section class="panel" id="guestbook-panel" aria-labelledby="gb-h">
     <h2 id="gb-h"><span class="numeral">II</span>El Libro de Visitas Sellado</h2>
+    <p><a href="/guestbook/">Mensajes sellados →</a></p>
     <p class="dim">Cada mensaje se sella en tu navegador. Cualquiera puede abrirlo, pero toma años de cálculo.</p>
-
     <div id="gb-closed">
       <p><strong id="gb-count">–</strong> <span id="gb-count-label">mensajes sellados</span>. El libro se abre el Día.</p>
     </div>
-
-    <form id="gb-form" hidden>
-      <label for="gb-text" class="eyebrow">Tu mensaje</label>
-      <textarea id="gb-text" maxlength="4000" placeholder="Para quien abra esto…"></textarea>
-      <p class="counter mono small"><span id="gb-chars">0</span> / 1.000</p>
-
-      <label for="gb-name" class="eyebrow">Tu nombre (opcional)</label>
-      <input id="gb-name" type="text" maxlength="40" autocomplete="nickname" placeholder="Anónimo" />
-      <p class="small faint name-note">El nombre no se sella: se ve junto al mensaje desde hoy.</p>
-
-      <fieldset class="seals">
-        <legend class="eyebrow">Elige un sello</legend>
-        <label class="seal-option"><input type="radio" name="seal" value="short" checked /><span><strong>Corto</strong><em>cerca de 1 año</em></span></label>
-        <label class="seal-option"><input type="radio" name="seal" value="decade" /><span><strong>Década</strong><em>cerca de 10 años</em></span></label>
-        <label class="seal-option"><input type="radio" name="seal" value="century" /><span><strong>Siglo</strong><em>cerca de 100 años</em></span></label>
-      </fieldset>
-
-      <p class="note">Nadie puede leer los mensajes, ni siquiera nosotros. Un mensaje por persona al año.</p>
-      <div class="captcha" id="gb-captcha"></div>
-      <p><button class="primary" id="gb-button" type="submit">Sellar</button></p>
-      <p id="gb-status" class="status" aria-live="polite"></p>
-    </form>
-    <p><a href="/guestbook/">Mensajes sellados →</a></p>
+    <GuestbookForm />
   </section>
 
   <section class="panel" id="number-panel" aria-labelledby="num-h">
@@ -181,99 +152,6 @@ import Shrine from '../layouts/Shrine.astro';
     height: auto;
     display: block;
     margin: 0.5rem 0 1rem;
-  }
-  hr.thin {
-    margin: 1.8rem 0;
-  }
-  .moves {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.7rem;
-    margin: 1rem 0;
-  }
-  .moves :global(button) {
-    font-family: var(--mono);
-    font-size: 1.1rem;
-    padding: 0.6rem 1.3rem;
-  }
-  .moves :global(button[aria-checked='true']) {
-    border-color: var(--gold);
-    color: var(--gold-2);
-    background: #2a2010;
-  }
-  .status:empty {
-    display: none;
-  }
-  .captcha:empty {
-    display: none;
-  }
-  .captcha {
-    margin: 1rem 0;
-  }
-  #gb-name {
-    width: 100%;
-    font: inherit;
-    font-size: 1.1rem;
-    color: var(--ink);
-    background: #0e0c09;
-    border: 1px solid var(--line-2);
-    border-radius: var(--radius);
-    padding: 0.55rem 0.9rem;
-    margin-top: 0.3rem;
-  }
-  #gb-name:focus {
-    border-color: var(--gold);
-    outline: none;
-  }
-  .name-note {
-    margin: 0.3rem 0 1.4rem;
-  }
-  .counter {
-    text-align: right;
-    color: var(--faint);
-    margin: 0.2rem 0 1rem;
-  }
-  .counter.over {
-    color: #e08a6a;
-  }
-  .seals {
-    border: 0;
-    padding: 0;
-    margin: 0 0 0.6rem;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-    gap: 0.7rem;
-  }
-  .seals legend {
-    margin-bottom: 0.6rem;
-  }
-  .seal-option {
-    cursor: pointer;
-  }
-  .seal-option input {
-    position: absolute;
-    opacity: 0;
-  }
-  .seal-option span {
-    display: flex;
-    flex-direction: column;
-    gap: 0.1rem;
-    border: 1px solid var(--line-2);
-    border-radius: var(--radius);
-    padding: 0.7rem 0.9rem;
-    transition: border-color 0.2s;
-  }
-  .seal-option em {
-    color: var(--dim);
-    font-size: 0.95rem;
-  }
-  .seal-option input:checked + span {
-    border-color: var(--gold);
-    background: #1f180d;
-  }
-  .seal-option input:focus-visible + span {
-    outline: 2px solid var(--gold);
-    outline-offset: 2px;
   }
   #number-details :global(dl) {
     display: grid;
