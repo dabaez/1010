@@ -8,6 +8,8 @@
 //   pnpm rite ledger <year>          print ledger/<year>.json
 //   pnpm rite export <year>          push ledger/<year>.json (+ RULES.md, solver) to LEDGER_REPO
 //   pnpm rite backup <dir>           copy the database into <dir>, keeping the newest 30
+//   pnpm rite names [year]           list the public names on guestbook entries (default: latest year)
+//   pnpm rite hide-name <id>         remove the public name from entry <id>; the message stays
 //
 // In production: node build/server/cli.mjs <command>, with the same
 // environment as the server (see deploy/systemd/rite.service).
@@ -20,7 +22,7 @@ import { loadConfig } from './config';
 import { createContext } from './context';
 import { ledgerJson } from './ledger';
 import { ledgerFor } from './records';
-import { closeRite, commitments, getYear, latestYear, markExported, movesMade, openRite, tick, towerState } from './rite';
+import { closeRite, commitments, getYear, hideName, latestYear, markExported, movesMade, namedEntries, openRite, tick, towerState } from './rite';
 
 const [cmd, arg] = process.argv.slice(2);
 const cfg = loadConfig();
@@ -83,6 +85,22 @@ async function main(): Promise<number> {
       console.log(`exported ledger/${year}.json to ${cfg.ledger!.repo}`);
       return 0;
     }
+    case 'names': {
+      const year = arg ? yearArg() : latestYear(ctx.db)?.year;
+      if (year === undefined) throw new Error('nothing has opened yet');
+      const rows = namedEntries(ctx, year);
+      if (!rows.length) console.log(`${year}: no names`);
+      for (const r of rows) console.log(`${String(r.id).padStart(6)}  ${JSON.stringify(r.name)}`);
+      return 0;
+    }
+    case 'hide-name': {
+      const id = Number(arg);
+      if (!Number.isInteger(id)) throw new Error('give an entry number, e.g. hide-name 12');
+      const r = hideName(ctx, id);
+      if (!r) throw new Error(`no entry ${id}`);
+      console.log(r.name === null ? `entry ${id} had no name` : `removed ${JSON.stringify(r.name)} from entry ${id} (${r.year})`);
+      return 0;
+    }
     case 'backup': {
       if (!arg) throw new Error('give a directory');
       mkdirSync(arg, { recursive: true });
@@ -94,7 +112,7 @@ async function main(): Promise<number> {
       return 0;
     }
     default:
-      console.error('usage: rite status | open | close [year] | tick | commitments [year] | ledger <year> | export <year> | backup <dir>');
+      console.error('usage: rite status | open | close [year] | tick | commitments [year] | ledger <year> | export <year> | backup <dir> | names [year] | hide-name <id>');
       return 2;
   }
 }

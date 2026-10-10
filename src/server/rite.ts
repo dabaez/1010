@@ -350,6 +350,32 @@ export function markExported(ctx: RiteContext, year: number): void {
   setMeta(ctx.db, exportedKey(year), new Date().toISOString());
 }
 
+// ------------------------------------------------------------------ moderation
+
+/** Every named entry of a year, for reviewing names by hand. */
+export function namedEntries(ctx: RiteContext, year: number): { id: number; name: string }[] {
+  return ctx.db
+    .select({ id: guestbook.id, name: guestbook.name })
+    .from(guestbook)
+    .where(sql`${guestbook.year} = ${year} and ${guestbook.name} is not null`)
+    .orderBy(asc(guestbook.id))
+    .all() as { id: number; name: string }[];
+}
+
+/**
+ * Removes the public name from an entry; the sealed message stays. If the
+ * year was already exported, it is exported again so the ledger's newest
+ * version drops the name too (earlier commits still have it).
+ */
+export function hideName(ctx: RiteContext, id: number): { year: number; name: string | null } | null {
+  const row = ctx.db.select().from(guestbook).where(eq(guestbook.id, id)).get();
+  if (!row) return null;
+  ctx.db.update(guestbook).set({ name: null }).where(eq(guestbook.id, id)).run();
+  deleteMeta(ctx.db, exportedKey(row.year));
+  ctx.log(`removed the name from entry ${id} (${row.year})`);
+  return { year: row.year, name: row.name };
+}
+
 // ------------------------------------------------------------------ writes
 
 export type WriteResult = { ok: true } | { ok: false; status: 400 | 409 | 423; error: string };

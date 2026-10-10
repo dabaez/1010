@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+#
+# rite — the Rite's CLI on the droplet, with the same environment as
+# deploy/systemd/rite.service. Run it as the site user, e.g. from root:
+#
+#   sudo -u rite /srv/sites/rite/current/app/deploy/rite names
+#   sudo -u rite /srv/sites/rite/current/app/deploy/rite hide-name 12
+#   sudo -u rite /srv/sites/rite/current/app/deploy/rite status
+#
+set -euo pipefail
+
+home="$(getent passwd "$(id -un)" | cut -d: -f6)"
+cd "$home/current/app"
+if [ -f "$home/rite.env" ]; then
+  set -a
+  . "$home/rite.env"
+  set +a
+fi
+export PATH=/usr/local/bin:/usr/bin:/bin
+export NODE_ENV=production DATA_DIR="$home/data" PUBLIC_DIR="$home/current/public" SITE_URL=https://1010.b4ez.com
+exec node build/server/cli.mjs "$@"

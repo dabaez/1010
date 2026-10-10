@@ -66,6 +66,20 @@ describe('the sealed guestbook', () => {
     expect(tooLong.status).toBe(400);
   });
 
+  it('can have its name removed by hand, keeping the message', async () => {
+    const h = harness({ at: MIDDLE });
+    const sealed = await seal('kept', BigInt(sealTableFor(2026).t.short));
+    const { id } = await (await post(h, '/api/guestbook', { seal: 'short', name: 'algo feo', ...sealed, captcha: 'ok' })).json();
+    const { hideName, namedEntries } = await import('../src/server/rite');
+    expect(namedEntries(h.rite, 2026)).toEqual([{ id, name: 'algo feo' }]);
+    expect(hideName(h.rite, id)).toEqual({ year: 2026, name: 'algo feo' });
+    const entry = await (await get(h, `/api/guestbook/${id}`)).json();
+    expect(entry.name).toBeNull();
+    expect(entry.ciphertext_b64).toBe(sealed.ciphertext_b64);
+    expect(namedEntries(h.rite, 2026)).toEqual([]);
+    expect(hideName(h.rite, 9999)).toBeNull();
+  });
+
   it('cleans names', () => {
     expect(cleanName(undefined)).toBeNull();
     expect(cleanName('   ')).toBeNull();
