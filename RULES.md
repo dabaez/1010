@@ -88,6 +88,7 @@ Quien escribe elige un sello, y el sello fija T:
 | Corto  | 1 año                                                                         |
 | Década | 10 años                                                                       |
 | Siglo  | 100 años                                                                      |
+| Milenio | 1.000 años                                                                   |
 
 T es la cantidad de cuadrados modulares de 2048 bits por segundo que hace un
 procesador de escritorio veloz con GMP, medida antes de cada Día, multiplicada

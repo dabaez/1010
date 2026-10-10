@@ -66,6 +66,18 @@ describe('the sealed guestbook', () => {
     expect(tooLong.status).toBe(400);
   });
 
+  it('takes a millennium seal, whose T is past 2^53', async () => {
+    const h = harness({ at: MIDDLE });
+    const t = sealTableFor(2026).t.millennium;
+    expect(BigInt(t)).toBeGreaterThan(2n ** 53n);
+    const sealed = await seal('para el año 3026', BigInt(t));
+    expect(sealed.t).toBe(t);
+    const r = await post(h, '/api/guestbook', { seal: 'millennium', ...sealed, captcha: 'ok' });
+    expect(r.status).toBe(200);
+    const entry = await (await get(h, `/api/guestbook/${(await r.json()).id}`)).json();
+    expect(entry).toMatchObject({ seal: 'millennium', t });
+  });
+
   it('can have its name removed by hand, keeping the message', async () => {
     const h = harness({ at: MIDDLE });
     const sealed = await seal('kept', BigInt(sealTableFor(2026).t.short));

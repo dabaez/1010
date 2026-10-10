@@ -3,12 +3,12 @@
 // every year before the Day, add that year's row, and the year's T goes into
 // its ledger.
 
-export const SEALS = ['short', 'decade', 'century'] as const;
+export const SEALS = ['short', 'decade', 'century', 'millennium'] as const;
 export type Seal = (typeof SEALS)[number];
 
-export const SEAL_YEARS: Record<Seal, number> = { short: 1, decade: 10, century: 100 };
+export const SEAL_YEARS: Record<Seal, number> = { short: 1, decade: 10, century: 100, millennium: 1000 };
 
-export const SEAL_LABELS: Record<Seal, string> = { short: 'Corto', decade: 'Década', century: 'Siglo' };
+export const SEAL_LABELS: Record<Seal, string> = { short: 'Corto', decade: 'Década', century: 'Siglo', millennium: 'Milenio' };
 
 export interface SealTable {
   /** what was benchmarked, for the record */
@@ -29,6 +29,7 @@ export const SEAL_TABLES: Record<number, SealTable> = {
       short: '34868142602589',
       decade: '348681426025887',
       century: '3486814260258865',
+      millennium: '34868142602588650',
     },
   },
 };

@@ -1,5 +1,7 @@
 // Talking to the server, and keeping time by its clock rather than ours.
 
+import type { Seal } from '../shared/seals';
+
 export type Phase = 'sealed' | 'open' | 'closing' | 'over';
 
 export interface NumberView {
@@ -32,7 +34,7 @@ export interface StateResponse {
   } | null;
   you: { vote: string | null; signed: boolean } | null;
   captcha: { provider: 'turnstile'; siteKey: string } | null;
-  seals: Record<'short' | 'decade' | 'century', { t: string; years: number }>;
+  seals: Record<Seal, { t: string; years: number }>;
   sealBenchmark: { cpu: string; squaringsPerSecond: number; tool: string; date: string };
 }
 

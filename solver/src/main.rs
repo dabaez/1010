@@ -252,6 +252,7 @@ fn seal_name(seal: &str) -> &str {
         "short" => "corto",
         "decade" => "década",
         "century" => "siglo",
+        "millennium" => "milenio",
         other => other,
     }
 }
@@ -419,9 +420,9 @@ fn bench(seconds: f64) {
     let rate = count as f64 / started.elapsed().as_secs_f64();
     println!("{:.0} cuadrados/s ({:.1} ns cada uno)", rate, 1e9 / rate);
     println!();
-    for (seal, years) in [("short", 1.0), ("decade", 10.0), ("century", 100.0)] {
+    for (seal, years) in [("short", 1.0), ("decade", 10.0), ("century", 100.0), ("millennium", 1000.0)] {
         let t = (rate * SECONDS_PER_YEAR * years).round();
-        println!("{seal:8} {years:>5} y  T = {:.0}", t);
+        println!("{seal:10} {years:>5} y  T = {:.0}", t);
     }
     if let Some(cpu) = fs::read_to_string("/proc/cpuinfo")
         .ok()
