@@ -1,8 +1,8 @@
 // The shrine page: countdown by the server's clock, the opening ceremony,
 // the ballot, and sealing guestbook entries in the browser.
 
-import { drandRoundUrl, u64Hex } from '../shared/beacon';
-import { MAX_MESSAGE_CHARS, messageLength, seal, type SealStep } from '../shared/timelock';
+import { drandRoundUrl } from '../shared/beacon';
+import { MAX_MESSAGE_CHARS, messageLength, seal } from '../shared/timelock';
 import { applyMove, parseMove } from '../shared/tower';
 import { $, el, fetchState, fmt, pad, postJson, serverNow, splitDuration, utc, type StateResponse } from './api';
 import { mountCaptcha, type CaptchaWidget } from './captcha';
@@ -99,22 +99,14 @@ function renderHero(s: StateResponse): void {
     eyebrow.textContent = `El Día de ${s.window.year}`;
     title.textContent = 'El templo está sellado.';
     sub.innerHTML = '';
-    sub.append(
-      'Hasta que abra el ',
-      el('strong', {}, utc(s.window.opensAt)),
-      ', cuando empieza el 10 de octubre en UTC+14.',
-    );
+    sub.append('Abre el ', el('strong', {}, utc(s.window.opensAt)), '.');
     ceremony.hidden = true;
     countdown.hidden = false;
   } else if (s.phase === 'open') {
     eyebrow.textContent = `El Día de ${s.window.year} · abierto`;
     title.textContent = 'El Rito está abierto.';
     sub.innerHTML = '';
-    sub.append(
-      'Para votar y firmar. Cierra el ',
-      el('strong', {}, utc(s.window.closesAt)),
-      ', cuando termina el 10 de octubre en UTC−12.',
-    );
+    sub.append('Cierra el ', el('strong', {}, utc(s.window.closesAt)), '.');
     ceremony.hidden = false;
     countdown.hidden = false;
     renderCeremony(thisYear);
@@ -270,11 +262,6 @@ function renderGuestbook(s: StateResponse): void {
   const form = $('#gb-form');
   form.hidden = !open;
   if (!open) return;
-  for (const [k, v] of Object.entries(s.seals)) {
-    const code = document.querySelector(`[data-t="${k}"]`);
-    if (code) code.textContent = `T = ${fmt(v.t)}`;
-  }
-  $('#gb-bench').textContent = `T es ${fmt(s.sealBenchmark.squaringsPerSecond)} cuadrados por segundo (${s.sealBenchmark.cpu}, ${s.sealBenchmark.date}) por el tiempo objetivo.`;
   const button = $('#gb-button') as HTMLButtonElement;
   const status = $('#gb-status');
   if (s.you?.signed && !status.dataset.sealedId) {
@@ -287,13 +274,6 @@ function renderGuestbook(s: StateResponse): void {
   }
 }
 
-const STEP_TEXT: Record<SealStep | 'send', string> = {
-  keygen: 'Forjando un módulo N de 2048 bits a partir de dos primos nuevos',
-  shortcut: 'Tomando el atajo que solo tiene quien sella: 2^(2^T) mod N, a través de φ(N)',
-  encrypt: 'Cifrando con AES-256-GCM bajo el SHA-256 del resultado',
-  send: 'Enviando N, T y el texto cifrado; los primos se olvidan',
-};
-
 function wireGuestbook(): void {
   const form = $('#gb-form') as HTMLFormElement;
   const text = $('#gb-text') as HTMLTextAreaElement;
@@ -301,7 +281,6 @@ function wireGuestbook(): void {
   const counter = chars.parentElement!;
   const button = $('#gb-button') as HTMLButtonElement;
   const status = $('#gb-status');
-  const steps = $('#gb-steps');
 
   text.addEventListener('input', () => {
     const n = messageLength(text.value);
@@ -324,37 +303,19 @@ function wireGuestbook(): void {
     button.disabled = true;
     text.disabled = true;
     status.className = 'status dim';
-    status.textContent = '';
-    steps.hidden = false;
-    steps.replaceChildren(...(['keygen', 'shortcut', 'encrypt', 'send'] as const).map((k) => el('li', { 'data-step': k }, STEP_TEXT[k])));
-    const mark = (k: string) => {
-      let passed = true;
-      steps.querySelectorAll('li').forEach((li) => {
-        if (li.dataset.step === k) {
-          passed = false;
-          li.className = 'active';
-        } else li.className = passed ? 'done' : '';
-      });
-    };
+    status.textContent = 'Sellando…';
     try {
       const captcha = await gbCaptcha;
       const token = await captcha.token();
-      // Give the browser a frame to paint each step.
-      const sealed = await seal(message, BigInt(t), (k) => mark(k));
-      mark('send');
+      const sealed = await seal(message, BigInt(t));
       const r = await postJson('/api/guestbook', { seal: sealName, ...sealed, captcha: token });
       captcha.reset();
       if (r.status === 200) {
-        steps.querySelectorAll('li').forEach((li) => (li.className = 'done'));
         text.value = '';
         chars.textContent = '0';
         status.dataset.sealedId = String(r.data.id);
         status.className = 'status success';
-        status.innerHTML = '';
-        status.append(
-          `Sellado como el mensaje #${r.data.id}. Abrirlo tomará ${state.seals[sealName].years === 1 ? 'cerca de un año' : `cerca de ${state.seals[sealName].years} años`} de cuadrados en el computador de escritorio más rápido de hoy: `,
-          el('code', {}, `rite-solver open ${r.data.id}`),
-        );
+        status.textContent = `Sellado como el mensaje #${r.data.id}.`;
         button.hidden = true;
         await refresh();
       } else {
@@ -365,7 +326,6 @@ function wireGuestbook(): void {
       status.textContent = (err as Error).message;
       button.disabled = false;
       text.disabled = false;
-      steps.hidden = true;
     }
   });
 }
@@ -384,27 +344,17 @@ function renderNumber(s: StateResponse): void {
     const row = (k: string, ...v: (Node | string)[]) => dl.append(el('dt', {}, k), el('dd', {}, ...v));
     row('Año', String(y.year));
     row('Número', el('span', { class: 'mono' }, fmt(y.number.decimal)));
-    row('Hex', el('span', { class: 'mono' }, y.number.hex));
     row('Bit', el('span', { class: 'mono' }, String(y.bit)));
-    row('Fuente', y.source === 'nist' ? 'Baliza de aleatoriedad del NIST (respaldo)' : y.source === 'drand' ? 'drand quicknet' : String(y.source));
-    row('Ronda', el('a', { href: drandRoundUrl(y.round) }, fmt(y.round)));
-    row('Aleatoriedad', el('span', { class: 'hex' }, y.randomness));
-    row(
-      'Derivación',
-      'Los primeros 8 bytes de la aleatoriedad, como entero sin signo de 64 bits: ',
-      el('span', { class: 'mono' }, `${y.randomness.slice(0, 16)} = ${u64Hex(BigInt(y.number.decimal))}`),
-      '. El Bit es el bit más bajo del último byte, ',
-      el('span', { class: 'mono' }, `0x${y.randomness.slice(-2)}`),
-      '.',
-    );
+    if (y.source === 'nist') row('Fuente', 'baliza del NIST (drand no respondió)');
+    else row('Ronda de drand', el('a', { href: drandRoundUrl(y.round) }, fmt(y.round)));
     parts.push(dl);
     if (y.source === 'drand') {
       const out = el('p', { class: 'small dim', 'aria-live': 'polite' });
-      const btn = el('button', { type: 'button' }, 'Verificarlo en tu navegador');
+      const btn = el('button', { type: 'button' }, 'Verificar');
       btn.addEventListener('click', async () => {
         btn.disabled = true;
         out.className = 'small dim';
-        out.textContent = 'Preguntando directamente a drand y revisando la firma…';
+        out.textContent = 'Verificando…';
         try {
           out.textContent = await verifyDrandInBrowser(y.round, y.randomness!);
           out.className = 'small success';
@@ -423,11 +373,9 @@ function renderNumber(s: StateResponse): void {
       el(
         'p',
         {},
-        `El Número y el Bit de ${c.year} los decidirá la ronda `,
+        `El Número de ${c.year} saldrá de la ronda `,
         el('a', { href: drandRoundUrl(c.numberRound) }, fmt(c.numberRound)),
-        ` de drand quicknet, emitida en el instante en que abre el Día (${utc(c.opensAt)}). Un empate en la torre al cierre lo rompe la ronda `,
-        el('a', { href: drandRoundUrl(c.tiebreakRound) }, fmt(c.tiebreakRound)),
-        ` (${utc(c.closesAt)}), que nadie puede conocer mientras la votación está abierta.`,
+        ' de drand.',
       ),
     );
   }

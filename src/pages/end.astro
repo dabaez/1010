@@ -2,7 +2,7 @@
 // The final page. The server serves it at / once all twelve rings stand on C,
 // and forever after. Try it with FAKE_STATE=CCCCCCCCCCCC.
 import Shrine from '../layouts/Shrine.astro';
-import { LEDGER_REPO_URL } from '../shared/site';
+import { REPO_URL } from '../shared/site';
 ---
 
 <Shrine title="La programación ha terminado" description="Los doce anillos están en C. El Rito Anual está completo." bare>
@@ -21,23 +21,13 @@ import { LEDGER_REPO_URL } from '../shared/site';
 
     <div class="words">
       <p>
-        Empezó el nueve de octubre de 2026, con todos los anillos en A y una profecía precisa: no B, sino C. Una vez al
-        año, durante cincuenta horas, era 10 de octubre en algún lugar de la Tierra; quien llegaba votaba, y un anillo se
-        movía.
-      </p>
-      <p>
-        A la multitud nunca se le dijo qué movimiento era sabio. Tropezó, retrocedió y siguió viniendo. Esto es lo que
-        construyó, un año a la vez.
-      </p>
-      <p>
-        El templo no volverá a abrir. Su registro permanece: cada Número y cada Bit, cada conteo, y el libro de visitas
-        sellado, cuyos sellos siguen cayendo a su propio ritmo, un cuadrado tras otro, mucho después del último voto.
+        Empezó el 9 de octubre de 2026, con todos los anillos en A. Una vez al año, quien llegaba votaba, y un anillo se
+        movía. El templo no volverá a abrir.
       </p>
     </div>
 
     <p class="links">
-      <a href="/tower/">Todo el viaje</a> · <a href="/archive/">El archivo</a> · <a href="/solver/">Abrir un sello</a> ·{' '}
-      <a href={LEDGER_REPO_URL}>El registro</a>
+      <a href="/tower/">Todo el viaje</a> · <a href="/archive/">El archivo</a> · <a href={REPO_URL}>Reglas y código</a>
     </p>
   </section>
 </Shrine>

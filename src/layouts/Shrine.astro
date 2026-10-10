@@ -5,6 +5,7 @@ import '@fontsource/cormorant-garamond/400-italic.css';
 import '@fontsource/ibm-plex-mono/400.css';
 import '@fontsource/ibm-plex-mono/500.css';
 import '../styles/global.css';
+import { REPO_URL } from '../shared/site';
 
 interface Props {
   title?: string;
@@ -15,7 +16,7 @@ interface Props {
 
 const {
   title,
-  description = 'Un sitio que abre un día al año: una Torre de Hanói que mueve un anillo por año, por votación; un libro de visitas sellado en acertijos de bloqueo temporal; y un número aleatorio verificable del año.',
+  description = 'Un sitio que abre un día al año.',
   wide = false,
   bare = false,
 } = Astro.props;
@@ -25,8 +26,6 @@ const nav = [
   ['/', 'Templo'],
   ['/tower/', 'Torre'],
   ['/archive/', 'Archivo'],
-  ['/solver/', 'Descifrar'],
-  ['/rules/', 'Reglas'],
 ];
 ---
 
@@ -67,9 +66,9 @@ const nav = [
       !bare && (
         <footer class="site-footer wrap">
           <p>
-            Abre un día al año: el 10 de octubre, durante 50 horas, en cualquier lugar de la Tierra.
+            Abre un día al año: el 10 de octubre, en cualquier lugar de la Tierra.
             <br />
-            El reloj del servidor es la única autoridad.
+            <a href={REPO_URL}>Reglas y código</a>
           </p>
         </footer>
       )

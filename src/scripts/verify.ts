@@ -20,7 +20,7 @@ export async function verifyDrandInBrowser(round: number, expectedRandomness: st
       if (beacon.randomness.toLowerCase() !== expectedRandomness.toLowerCase()) {
         throw new Error(`MISMATCH: drand dice ${beacon.randomness} para la ronda ${round}`);
       }
-      return `Verificado en tu navegador vía ${new URL(relay).host}: la firma BLS de la ronda ${fmt(round)} es válida y su aleatoriedad coincide.`;
+      return `Verificado en tu navegador: la ronda ${fmt(round)} está firmada por drand y coincide.`;
     } catch (e) {
       if (String((e as Error).message).startsWith('MISMATCH')) throw e;
       lastError = e;

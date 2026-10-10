@@ -34,10 +34,7 @@ import Shrine from '../layouts/Shrine.astro';
 
   <section class="panel" id="tower-panel" aria-labelledby="tower-h">
     <h2 id="tower-h"><span class="numeral">I</span>La Torre</h2>
-    <p class="dim">
-      Doce anillos, tres postes. Cada Día los visitantes votan y se mueve exactamente un anillo. Cuando los doce estén
-      en C, la programación habrá terminado. Jugando a la perfección toma 4.095 años: el año 6121, como muy pronto.
-    </p>
+    <p class="dim">Doce anillos que deben pasar de A a C. Cada Día se mueve uno, por votación.</p>
     <svg id="tower-svg" class="tower-svg"></svg>
     <p class="stat-row">
       <span>Movimientos hechos: <strong id="moves-made">–</strong>.</span>
@@ -47,29 +44,21 @@ import Shrine from '../layouts/Shrine.astro';
     <div id="ballot" hidden>
       <hr class="thin" />
       <h3>La votación de <span data-year></span></h3>
-      <p class="dim">
-        Estos son los únicos movimientos legales. Los votos quedan ocultos hasta que se cierre el Día; entonces se hace
-        el movimiento con más votos. Nada aquí te dice cuál es el sabio. La multitud está sola.
-      </p>
+      <p class="dim">Los votos se revelan al cierre. Gana el movimiento con más votos.</p>
       <div class="moves" id="moves" role="radiogroup" aria-label="Movimientos legales"></div>
       <div class="captcha" id="vote-captcha"></div>
       <p><button class="primary" id="vote-button" disabled>Votar</button></p>
       <p id="vote-status" class="status" aria-live="polite"></p>
     </div>
-    <p><a href="/tower/">Toda la historia de movimientos →</a></p>
+    <p><a href="/tower/">Historia de movimientos →</a></p>
   </section>
 
   <section class="panel" id="guestbook-panel" aria-labelledby="gb-h">
     <h2 id="gb-h"><span class="numeral">II</span>El Libro de Visitas Sellado</h2>
-    <p class="dim">
-      Cada mensaje se sella en tu navegador dentro de un acertijo de bloqueo temporal. Cualquiera puede abrirlo, pero
-      solo elevando un número al cuadrado una y otra vez, billones de veces seguidas. Más computadores no ayudan; solo
-      uno más rápido. No resiste a la computación cuántica: un computador cuántico lo bastante grande abriría todos los
-      sellos de una vez.
-    </p>
+    <p class="dim">Cada mensaje se sella en tu navegador. Cualquiera puede abrirlo, pero toma años de cálculo.</p>
 
     <div id="gb-closed">
-      <p><strong id="gb-count">–</strong> <span id="gb-count-label">mensajes sellados</span> hasta ahora. El libro se abre el Día.</p>
+      <p><strong id="gb-count">–</strong> <span id="gb-count-label">mensajes sellados</span>. El libro se abre el Día.</p>
     </div>
 
     <form id="gb-form" hidden>
@@ -79,34 +68,24 @@ import Shrine from '../layouts/Shrine.astro';
 
       <fieldset class="seals">
         <legend class="eyebrow">Elige un sello</legend>
-        <label class="seal-option"><input type="radio" name="seal" value="short" checked /><span><strong>Corto</strong><em>cerca de 1 año</em><code data-t="short"></code></span></label>
-        <label class="seal-option"><input type="radio" name="seal" value="decade" /><span><strong>Década</strong><em>cerca de 10 años</em><code data-t="decade"></code></span></label>
-        <label class="seal-option"><input type="radio" name="seal" value="century" /><span><strong>Siglo</strong><em>cerca de 100 años</em><code data-t="century"></code></span></label>
+        <label class="seal-option"><input type="radio" name="seal" value="short" checked /><span><strong>Corto</strong><em>cerca de 1 año</em></span></label>
+        <label class="seal-option"><input type="radio" name="seal" value="decade" /><span><strong>Década</strong><em>cerca de 10 años</em></span></label>
+        <label class="seal-option"><input type="radio" name="seal" value="century" /><span><strong>Siglo</strong><em>cerca de 100 años</em></span></label>
       </fieldset>
-      <p class="small faint" id="gb-bench"></p>
 
-      <p class="note">
-        Nadie puede leer los mensajes, ni siquiera nosotros, así que no se pueden moderar. Solo el texto cifrado sale de
-        tu navegador. Un mensaje por persona al año, de hasta 1.000 caracteres. Los sellos suelen caer antes de tiempo, a
-        medida que los computadores se vuelven más rápidos.
-      </p>
+      <p class="note">Nadie puede leer los mensajes, ni siquiera nosotros. Un mensaje por persona al año.</p>
       <div class="captcha" id="gb-captcha"></div>
       <p><button class="primary" id="gb-button" type="submit">Sellar</button></p>
-      <ol class="steps small" id="gb-steps" hidden></ol>
       <p id="gb-status" class="status" aria-live="polite"></p>
     </form>
-    <p><a href="/archive/">El archivo de mensajes sellados →</a> · <a href="/solver/">Cómo abrir uno →</a></p>
+    <p><a href="/archive/">Mensajes sellados →</a></p>
   </section>
 
   <section class="panel" id="number-panel" aria-labelledby="num-h">
     <h2 id="num-h"><span class="numeral">III</span>El Número y el Bit</h2>
-    <p class="dim">
-      Cada Día tiene un número aleatorio y un bit aleatorio, tomados de la baliza drand que mantiene la League of
-      Entropy. No los elegimos nosotros: la ronda que los decide se publica con un año de anticipación, y cualquiera
-      puede verificarla.
-    </p>
+    <p class="dim">Un número y un bit aleatorios por año, de la baliza pública drand.</p>
     <div id="number-details"></div>
-    <p><a href="/archive/">El Número y el Bit de cada año →</a></p>
+    <p><a href="/archive/">Todos los años →</a></p>
   </section>
 </Shrine>
 
@@ -266,13 +245,6 @@ import Shrine from '../layouts/Shrine.astro';
     color: var(--dim);
     font-size: 0.95rem;
   }
-  .seal-option code {
-    background: none;
-    border: 0;
-    padding: 0;
-    color: var(--faint);
-    font-size: 0.7rem;
-  }
   .seal-option input:checked + span {
     border-color: var(--gold);
     background: #1f180d;
@@ -280,16 +252,6 @@ import Shrine from '../layouts/Shrine.astro';
   .seal-option input:focus-visible + span {
     outline: 2px solid var(--gold);
     outline-offset: 2px;
-  }
-  .steps {
-    color: var(--dim);
-    padding-left: 1.3rem;
-  }
-  .steps :global(li.done) {
-    color: var(--ok);
-  }
-  .steps :global(li.active) {
-    color: var(--gold-2);
   }
   #number-details :global(dl) {
     display: grid;

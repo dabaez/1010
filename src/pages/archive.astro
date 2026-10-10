@@ -7,8 +7,7 @@ import Shrine from '../layouts/Shrine.astro';
     <p class="eyebrow">El registro</p>
     <h1>Archivo</h1>
     <p class="dim lede">
-      El Número y el Bit de cada año con las rondas que los decidieron, cada conteo y cada mensaje sellado. El mismo
-      registro se escribe cada año en un repositorio público, para que el Rito pueda sobrevivir a este sitio.
+      El Número y el Bit, la votación y los mensajes sellados de cada año.
     </p>
   </section>
 
@@ -89,7 +88,7 @@ import Shrine from '../layouts/Shrine.astro';
 </style>
 
 <script>
-  import { DRAND_CHAIN, drandRoundUrl } from '../shared/beacon';
+  import { drandRoundUrl } from '../shared/beacon';
   import { $, el, fmt, getJson, utc } from '../scripts/api';
   import { verifyDrandInBrowser } from '../scripts/verify';
 
@@ -145,13 +144,6 @@ import Shrine from '../layouts/Shrine.astro';
       ` de drand quicknet, emitida en la apertura, el ${utc(n.opensAt)}. Un empate al cierre lo romperá la ronda `,
       el('a', { href: drandRoundUrl(n.tiebreakRound) }, fmt(n.tiebreakRound)),
       `, del ${utc(n.closesAt)}.`,
-    ),
-    el(
-      'p',
-      { class: 'dim small' },
-      `Ronda = floor((t − ${DRAND_CHAIN.genesis}) / ${DRAND_CHAIN.period}) + 1 para la cadena `,
-      el('span', { class: 'hex' }, DRAND_CHAIN.hash),
-      '. Esos enlaces responderán cuando las rondas existan.',
     ),
   );
 
@@ -238,7 +230,6 @@ import Shrine from '../layouts/Shrine.astro';
                 'div',
                 { class: 'entry', id: `entry-${e.id}` },
                 el('header', {}, el('strong', {}, `#${e.id}`), el('span', {}, `sello ${(SEAL_NAMES[e.seal] ?? e.seal).toLowerCase()}`), el('span', { class: 'mono small dim' }, `T = ${fmt(e.t)}`), el('span', { class: 'small faint' }, utc(e.created_at))),
-                el('p', { class: 'small' }, 'Para abrirlo: ', el('code', {}, `rite-solver open ${e.id}`)),
                 el('details', {}, el('summary', { class: 'small' }, 'el acertijo'), el('p', { class: 'hex' }, `N = ${e.n_hex}`), el('p', { class: 'hex' }, `iv = ${e.iv_b64}`), el('p', { class: 'hex' }, `ciphertext = ${e.ciphertext_b64}`)),
               ),
             )
