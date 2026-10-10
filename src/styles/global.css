@@ -506,3 +506,17 @@ details > summary {
 .small {
   font-size: 0.95rem;
 }
+
+/* A→B, with a drawn arrow (see moveEl in src/scripts/api.ts) */
+.move {
+  white-space: nowrap;
+}
+.move .arrow {
+  width: 0.95em;
+  height: 0.62em;
+  margin: 0 0.12em;
+  vertical-align: 0.06em;
+}
+.tally {
+  white-space: normal;
+}

@@ -1,6 +1,6 @@
 // Drives components/Ballot.astro: legal moves as buttons, the captcha, and the vote.
 
-import { $, el, postJson, type StateResponse } from './api';
+import { $, el, moveEl, postJson, type StateResponse } from './api';
 import { mountCaptcha, type CaptchaWidget } from './captcha';
 
 export interface BallotOptions {
@@ -63,11 +63,11 @@ export function createBallot(opts: BallotOptions): Ballot {
         moves.dataset.for = s.tower.ballot.join() + voted;
         moves.replaceChildren(
           ...s.tower.ballot.map((m) => {
-            const b = el('button', { type: 'button', role: 'radio', 'aria-checked': String(m === (voted ?? selected)) }, m);
+            const b = el('button', { type: 'button', role: 'radio', 'data-move': m, 'aria-checked': String(m === (voted ?? selected)) }, moveEl(m));
             b.disabled = !!voted;
             b.addEventListener('click', () => {
               selected = m;
-              moves.querySelectorAll('button').forEach((x) => x.setAttribute('aria-checked', String(x.textContent === m)));
+              moves.querySelectorAll('button').forEach((x) => x.setAttribute('aria-checked', String(x.dataset.move === m)));
               button.disabled = false;
               opts.onSelect(m);
             });
@@ -78,7 +78,7 @@ export function createBallot(opts: BallotOptions): Ballot {
       if (voted) {
         button.hidden = true;
         status.className = 'status success';
-        status.textContent = `Tu voto, ${voted}, queda sellado hasta el cierre.`;
+        status.replaceChildren('Tu voto, ', moveEl(voted), ', queda sellado hasta el cierre.');
       } else {
         button.disabled = !selected;
         captcha ??= mountCaptcha($('#vote-captcha'), s.captcha?.siteKey ?? null);

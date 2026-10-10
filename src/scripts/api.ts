@@ -111,6 +111,37 @@ export function $(sel: string, root: ParentNode = document): HTMLElement {
   return el as HTMLElement;
 }
 
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/**
+ * A move such as A→B. The arrow is drawn rather than typed: the mono font
+ * has no → glyph, and the browser's fallback sits too low next to the letters.
+ */
+export function moveEl(name: string): HTMLElement {
+  const [from, to] = name.split('→');
+  if (to === undefined) return el('span', { class: 'move' }, name);
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 16 10');
+  svg.setAttribute('class', 'arrow');
+  svg.setAttribute('aria-hidden', 'true');
+  const path = document.createElementNS(SVG_NS, 'path');
+  path.setAttribute('d', 'M1.5 5H14M10 1.5 14 5l-4 3.5');
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke', 'currentColor');
+  path.setAttribute('stroke-width', '1.5');
+  path.setAttribute('stroke-linecap', 'round');
+  path.setAttribute('stroke-linejoin', 'round');
+  svg.append(path);
+  return el('span', { class: 'move' }, from!, svg, el('span', { class: 'sr-only' }, ' a '), to);
+}
+
+/** Votes per move: A→B 3 · A→C 5 */
+export function tallyEl(tally: Record<string, number>): HTMLElement {
+  const out = el('span', { class: 'tally' });
+  Object.entries(tally).forEach(([m, n], i) => out.append(...(i ? [' · '] : []), moveEl(m), ` ${n}`));
+  return out;
+}
+
 export function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
   attrs: Record<string, string> = {},

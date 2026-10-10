@@ -78,7 +78,7 @@ import Shrine from '../layouts/Shrine.astro';
 </style>
 
 <script>
-  import { $, el, fetchState, fmt, getJson } from '../scripts/api';
+  import { $, el, fetchState, fmt, getJson, moveEl, tallyEl } from '../scripts/api';
   import { createBallot } from '../scripts/ballot';
   import { drawTower } from '../scripts/tower-draw';
   import { START_STATE, applyMove, parseMove } from '../shared/tower';
@@ -135,8 +135,8 @@ import Shrine from '../layouts/Shrine.astro';
           {},
           el('td', {}, String(m.number)),
           el('td', {}, String(m.year)),
-          el('td', { class: 'mono' }, m.move),
-          el('td', { class: 'mono' }, Object.entries(m.tally).map(([k, v]) => `${k} ${v}`).join(' · ')),
+          el('td', { class: 'mono' }, moveEl(m.move)),
+          el('td', { class: 'mono' }, tallyEl(m.tally)),
           el('td', {}, DECIDED[m.decided_by] ?? m.decided_by),
           el('td', { class: 'mono' }, fmt(m.optimal_remaining)),
         ),

@@ -3,7 +3,7 @@
 
 import { drandRoundUrl } from '../shared/beacon';
 import { SEAL_LABELS, isSeal } from '../shared/seals';
-import { el, fmt, utc } from './api';
+import { el, fmt, moveEl, tallyEl, utc } from './api';
 import { verifyDrandInBrowser } from './verify';
 
 export interface Entry {
@@ -152,9 +152,9 @@ export function renderYear(y: YearFull): HTMLElement {
         'p',
         {},
         'Movimiento ',
-        el('strong', { class: 'mono' }, y.tower.move),
+        el('strong', { class: 'mono' }, moveEl(y.tower.move)),
         `, ${DECIDED[y.tower.decided_by] ?? y.tower.decided_by}. `,
-        el('span', { class: 'mono small dim' }, Object.entries(y.tower.tally).map(([k, v]) => `${k}: ${v}`).join(' · ')),
+        el('span', { class: 'mono small dim' }, tallyEl(y.tower.tally)),
       ),
     );
   } else if (!y.closed_at) {
@@ -186,9 +186,10 @@ export function renderYear(y: YearFull): HTMLElement {
   if (tb.derivation) {
     row(
       'Desempate',
-      `número mod ${tb.derivation.choices.length} = ${tb.derivation.index} → `,
-      el('span', { class: 'mono' }, tb.derivation.choices.join(', ')),
-      ` → ${tb.derivation.choices[tb.derivation.index]}`,
+      `número mod ${tb.derivation.choices.length} = ${tb.derivation.index}; de `,
+      ...tb.derivation.choices.flatMap((c, i) => [i ? ', ' : '', el('span', { class: 'mono' }, moveEl(c))]),
+      ' salió ',
+      el('span', { class: 'mono' }, moveEl(tb.derivation.choices[tb.derivation.index]!)),
     );
   }
   if (y.tower) row('Estado de la torre', el('span', { class: 'mono' }, `${y.tower.state_before} → ${y.tower.state_after}`));
@@ -217,7 +218,7 @@ export function renderYearList(years: YearSummary[]): HTMLElement {
           { href: `/archive/${y.year}/` },
           el('strong', {}, String(y.year)),
           el('span', { class: 'mono' }, y.number ? fmt(y.number.decimal) : '—'),
-          el('span', { class: 'mono' }, y.move ?? (y.closed ? '—' : 'abierto')),
+          el('span', { class: 'mono' }, y.move ? moveEl(y.move) : y.closed ? '—' : 'abierto'),
           el('span', {}, `${fmt(y.guestbook_count)} ${y.guestbook_count === 1 ? 'mensaje' : 'mensajes'}`),
         ),
       ),
