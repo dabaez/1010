@@ -4,17 +4,13 @@ on:
   push:
     branches:
       - main
+  # Pull requests (Dependabot's included) run the checks but never deploy.
+  pull_request:
   # Lets a deploy be re-run by hand, e.g. after a Dependabot merge.
   workflow_dispatch:
 
 permissions:
   contents: read
-
-# Deploys run one at a time; a newer push waits instead of cancelling one
-# that is halfway through.
-concurrency:
-  group: deploy
-  cancel-in-progress: false
 
 jobs:
   # The checks: types, the build, and every test, including a round trip
@@ -53,7 +49,14 @@ jobs:
   # nothing but publish this site (see scripts/ship.sh).
   deploy:
     needs: check
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    # Deploys run one at a time; a newer push waits instead of cancelling one
+    # that is halfway through. Set on this job, not the workflow, so a pull
+    # request's checks can't displace a deploy waiting its turn.
+    concurrency:
+      group: deploy
+      cancel-in-progress: false
     timeout-minutes: 15
 
     steps:
