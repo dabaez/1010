@@ -52,11 +52,13 @@ export const votes = sqliteTable(
   (t) => [primaryKey({ columns: [t.year, t.voter_hash] })],
 );
 
-/** Never contains plaintext. */
+/** The message is never stored in plaintext; only the optional name is. */
 export const guestbook = sqliteTable('guestbook', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   year: integer('year').notNull(),
   seal: text('seal').notNull(),
+  /** optional public name, plaintext; null when anonymous */
+  name: text('name'),
   n_hex: text('n_hex').notNull(),
   /** squarings, decimal */
   t: text('t').notNull(),

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { cleanName } from '../src/server/app';
 import { ipPrefix, voterHash } from '../src/server/identity';
 import { LIMITS, RateLimiter } from '../src/server/ratelimit';
 import { loadConfig } from '../src/server/config';
@@ -42,7 +43,7 @@ describe('the sealed guestbook', () => {
     expect(again.status).toBe(409);
 
     const entry = await (await get(h, `/api/guestbook/${id}`)).json();
-    expect(entry).toEqual({ id, year: 2026, seal: 'short', ...sealed, created_at: '2026-10-10T12:00:00.000Z' });
+    expect(entry).toEqual({ id, year: 2026, seal: 'short', name: null, ...sealed, created_at: '2026-10-10T12:00:00.000Z' });
     expect(JSON.stringify(entry)).not.toContain('listening');
 
     const list = await (await get(h, '/api/guestbook?year=2026')).json();
@@ -50,6 +51,29 @@ describe('the sealed guestbook', () => {
     const state = await (await get(h, '/api/state', '10.9.9.9')).json();
     expect(state.you.signed).toBe(true);
     expect(state.year.guestbookCount).toBe(1);
+  });
+
+  it('keeps an optional name in plaintext next to the sealed message', async () => {
+    const h = harness({ at: MIDDLE });
+    const sealed = await seal('secret words', BigInt(sealTableFor(2026).t.decade));
+    const r = await post(h, '/api/guestbook', { seal: 'decade', name: '  Ana   de 2026 ', ...sealed, captcha: 'ok' });
+    expect(r.status).toBe(200);
+    const { id } = await r.json();
+    const entry = await (await get(h, `/api/guestbook/${id}`)).json();
+    expect(entry.name).toBe('Ana de 2026');
+    expect(JSON.stringify(entry)).not.toContain('secret words');
+    const tooLong = await post(h, '/api/guestbook', { seal: 'decade', name: 'x'.repeat(41), ...sealed, captcha: 'ok' });
+    expect(tooLong.status).toBe(400);
+  });
+
+  it('cleans names', () => {
+    expect(cleanName(undefined)).toBeNull();
+    expect(cleanName('   ')).toBeNull();
+    expect(cleanName(' Ana\n López ')).toBe('Ana López');
+    expect(cleanName('👩‍👩‍👧 familia')).toBe('👩‍👩‍👧 familia');
+    expect(cleanName('a\u202Eb')).toBe(false);
+    expect(cleanName(42)).toBe(false);
+    expect(cleanName('ñ'.repeat(40))).toBe('ñ'.repeat(40));
   });
 
   it('rejects a T that does not match the chosen seal, and malformed puzzles', async () => {
@@ -99,6 +123,34 @@ describe('the end of programming', () => {
   it('does not count all rings on B', async () => {
     const h = harness({ at: MIDDLE, fakeState: 'BBBBBBBBBBBB' });
     expect((await (await get(h, '/api/state')).json()).phase).toBe('open');
+  });
+});
+
+describe('the archive', () => {
+  it('serves the latest year in full, a line per year, and one page per year', async () => {
+    const h = harness({ at: '2026-10-10T12:00:00Z' });
+    const sealed = await seal('hola', BigInt(sealTableFor(2026).t.short));
+    await post(h, '/api/guestbook', { seal: 'short', name: 'Ana', ...sealed, captcha: 'ok' });
+    h.clock.set('2027-11-01T00:00:00Z');
+    await get(h, '/api/state');
+    const { tick } = await import('../src/server/rite');
+    await tick(h.rite);
+
+    const a = await (await get(h, '/api/archive')).json();
+    expect(a.latest.year).toBe(2027);
+    expect(a.years.map((y: { year: number }) => y.year)).toEqual([2027, 2026]);
+    expect(a.years[1]).toMatchObject({ year: 2026, closed: true, guestbook_count: 1 });
+    expect(a.next.year).toBe(2028);
+
+    const y2026 = await (await get(h, '/api/archive/2026')).json();
+    expect(y2026.entries).toHaveLength(1);
+    expect(y2026.entries[0].name).toBe('Ana');
+    expect(y2026.tower.move).toMatch(/^A→[BC]$/);
+    expect((await get(h, '/api/archive/1999')).status).toBe(404);
+
+    const page = await get(h, '/archive/2026/');
+    expect(await page.text()).toContain('one year');
+    expect((await get(h, '/archive/2026')).headers.get('location')).toBe('/archive/2026/');
   });
 });
 

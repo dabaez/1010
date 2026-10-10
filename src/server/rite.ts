@@ -393,7 +393,7 @@ export function addEntry(
   ctx: RiteContext,
   year: number,
   voter: string,
-  entry: { seal: string; n_hex: string; t: string; iv_b64: string; ciphertext_b64: string },
+  entry: { seal: string; name: string | null; n_hex: string; t: string; iv_b64: string; ciphertext_b64: string },
   now: Date,
 ): WriteResult & { id?: number } {
   return ctx.db.$client

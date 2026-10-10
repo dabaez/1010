@@ -3,14 +3,14 @@
 
 import { getConnInfo } from '@hono/node-server/conninfo';
 import { Hono, type Context } from 'hono';
-import { isRitualOpen, currentOrNextWindow, windowFor } from '../shared/calendar';
+import { isRitualOpen, currentOrNextWindow, nextUnopenedWindow, windowFor } from '../shared/calendar';
 import { isSeal, sealTableFor, SEAL_YEARS, SEALS } from '../shared/seals';
-import { MAX_CIPHERTEXT_BYTES, MODULUS_BITS } from '../shared/timelock';
+import { MAX_CIPHERTEXT_BYTES, MAX_NAME_CHARS, MODULUS_BITS } from '../shared/timelock';
 import { OPTIMAL_TOTAL, distanceToGoal, isComplete, legalMoves, moveName } from '../shared/tower';
 import type { Captcha } from './captcha';
 import { voterHash } from './identity';
 import { LIMITS, RateLimiter } from './ratelimit';
-import { archive, entriesFor, entryById, ledgerFor, towerHistory, yearView } from './records';
+import { entriesFor, entryById, ledgerFor, towerHistory, yearFull, yearSummaries, yearView } from './records';
 import {
   addEntry,
   castVote,
@@ -52,6 +52,20 @@ export function clientIp(c: Context, trustProxy: boolean): string {
 }
 
 type Phase = 'sealed' | 'open' | 'closing' | 'over';
+
+/**
+ * The optional public name on a guestbook entry: trimmed, NFC, at most
+ * MAX_NAME_CHARS. null when absent; false when unacceptable.
+ */
+export function cleanName(v: unknown): string | null | false {
+  if (v === undefined || v === null) return null;
+  if (typeof v !== 'string') return false;
+  const s = v.normalize('NFC').replace(/\s+/g, ' ').trim();
+  if (!s) return null;
+  // Control characters, and bidi overrides that could disguise the name.
+  if (/[\p{Cc}\u202A-\u202E\u2066-\u2069]/u.test(s)) return false;
+  return [...s].length <= MAX_NAME_CHARS ? s : false;
+}
 
 export function createApp(deps: AppDeps) {
   const { rite } = deps;
@@ -150,10 +164,20 @@ export function createApp(deps: AppDeps) {
     });
   });
 
+  // The archive: the latest year in full, a line for every year, and the
+  // round already fixed for the next Number.
   app.get('/api/archive', (c) => {
-    const now = rite.now();
-    const next = currentOrNextWindow(now);
-    return c.json({ years: archive(rite.db), next: commitments(next.year) });
+    const latest = latestYear(rite.db);
+    return c.json({
+      latest: latest ? yearFull(rite.db, latest.year) : null,
+      years: yearSummaries(rite.db),
+      next: commitments(nextUnopenedWindow(rite.now()).year),
+    });
+  });
+
+  app.get('/api/archive/:year{[0-9]+}', (c) => {
+    const y = yearFull(rite.db, Number(c.req.param('year')));
+    return y ? c.json(y) : c.json({ error: 'ese año no existe' }, 404);
   });
 
   app.get('/api/guestbook', (c) => {
@@ -212,6 +236,8 @@ export function createApp(deps: AppDeps) {
     const g = await guardWrite(c);
     if (!g.ok) return g.res;
     const { seal, n_hex, t, iv_b64, ciphertext_b64 } = g.body;
+    const name = cleanName(g.body.name);
+    if (name === false) return c.json({ error: `el nombre puede tener hasta ${MAX_NAME_CHARS} caracteres` }, 400);
     if (!isSeal(seal)) return c.json({ error: 'elige un sello: corto, década o siglo' }, 400);
     if (String(t) !== sealTableFor(g.year).t[seal]) return c.json({ error: `T no coincide con el sello ${seal} de ${g.year}` }, 400);
     if (typeof n_hex !== 'string' || !/^[0-9a-f]+$/.test(n_hex) || BigInt('0x' + n_hex).toString(2).length !== MODULUS_BITS) {
@@ -223,7 +249,7 @@ export function createApp(deps: AppDeps) {
     if (!ct || ct.toString('base64') !== ciphertext_b64 || ct.length < 17 || ct.length > MAX_CIPHERTEXT_BYTES) {
       return c.json({ error: 'el texto cifrado no es base64 válido de un mensaje sellado de hasta 1.000 caracteres' }, 400);
     }
-    const r = addEntry(rite, g.year, g.voter, { seal, n_hex, t: String(t), iv_b64, ciphertext_b64 }, rite.now());
+    const r = addEntry(rite, g.year, g.voter, { seal, name, n_hex, t: String(t), iv_b64, ciphertext_b64 }, rite.now());
     if (!r.ok) return c.json({ error: r.error }, r.status);
     return c.json({ ok: true, id: r.id });
   });
@@ -238,6 +264,9 @@ export function createApp(deps: AppDeps) {
     await next();
   });
   app.get('/end', (c) => c.redirect('/end/', 301));
+  // Every year's archive page is the same static page; it reads the year from the URL.
+  app.get('/archive/:year{[0-9]+}', (c) => c.redirect(`/archive/${c.req.param('year')}/`, 301));
+  app.get('/archive/:year{[0-9]+}/', (c) => serveStatic(c, deps.publicDir, '/archive/year/'));
   app.get('/end/', async (c, next) => {
     if (!isProgrammingOver(rite)) return c.redirect('/', 302);
     await next();

@@ -1,0 +1,47 @@
+---
+// One year's page. The server serves this same page for every /archive/<year>/;
+// the script reads the year from the address.
+import Shrine from '../../layouts/Shrine.astro';
+---
+
+<Shrine title="Archivo">
+  <p class="year-nav" id="year-nav"><a href="/archive/">← Archivo</a></p>
+  <div id="year"><p class="dim center">Cargando…</p></div>
+</Shrine>
+
+<style>
+  .year-nav {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+</style>
+
+<script>
+  import { $, el, getJson } from '../../scripts/api';
+  import { renderYear, type YearFull, type YearSummary } from '../../scripts/year-view';
+
+  const year = Number(location.pathname.match(/\/archive\/(\d+)\/?$/)?.[1]);
+  const res = Number.isInteger(year) ? await fetch(`/api/archive/${year}`) : null;
+
+  if (!res?.ok) {
+    $('#year').replaceChildren(el('p', { class: 'center dim' }, 'Ese año no está en el registro.'));
+  } else {
+    const y = (await res.json()) as YearFull;
+    document.title = `${y.year} · El Rito Anual`;
+    $('#year').replaceChildren(renderYear(y));
+
+    // Links to the neighbouring years that exist.
+    const { years } = await getJson<{ years: YearSummary[] }>('/api/archive');
+    const have = new Set(years.map((s) => s.year));
+    const nav = $('#year-nav');
+    const links = [
+      have.has(y.year - 1) && el('a', { href: `/archive/${y.year - 1}/` }, `← ${y.year - 1}`),
+      have.has(y.year + 1) && el('a', { href: `/archive/${y.year + 1}/` }, `${y.year + 1} →`),
+    ].filter((a): a is HTMLAnchorElement => !!a);
+    const side = el('span');
+    links.forEach((a, i) => side.append(...(i ? [' · ', a] : [a])));
+    nav.append(side);
+  }
+</script>

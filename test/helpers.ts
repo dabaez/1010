@@ -29,6 +29,8 @@ export function makePublicDir(): string {
   writeFileSync(join(dir, 'end', 'index.html'), '<title>programming is over</title>');
   mkdirSync(join(dir, 'archive'));
   writeFileSync(join(dir, 'archive', 'index.html'), '<title>archive</title>');
+  mkdirSync(join(dir, 'archive', 'year'));
+  writeFileSync(join(dir, 'archive', 'year', 'index.html'), '<title>one year</title>');
   return dir;
 }
 

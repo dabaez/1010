@@ -2,259 +2,66 @@
 import Shrine from '../layouts/Shrine.astro';
 ---
 
-<Shrine title="Archivo" description="Cada año del Rito Anual: el Número y el Bit con sus rondas de la baliza, los conteos de votos y los acertijos del libro de visitas sellado." wide>
+<Shrine title="Archivo" description="Cada año del Rito Anual: el Número y el Bit, la votación y los mensajes sellados.">
   <section class="center">
     <p class="eyebrow">El registro</p>
     <h1>Archivo</h1>
-    <p class="dim lede">
-      El Número y el Bit, la votación y los mensajes sellados de cada año.
-    </p>
   </section>
 
-  <section class="panel" id="next">
-    <h2>Comprometido de antemano</h2>
-    <p class="dim">Cargando…</p>
+  <div id="latest"><p class="dim center">Cargando…</p></div>
+
+  <section id="previous" hidden>
+    <h2>Años anteriores</h2>
+    <div id="year-list"></div>
   </section>
 
-  <div id="years"></div>
+  <section class="panel next" id="next" hidden></section>
 </Shrine>
 
 <style>
-  .lede {
-    max-width: 38rem;
-    margin: 0 auto 2.5rem;
+  #previous {
+    margin: 0 0 2.5rem;
   }
-  #years :global(.year h2) {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
-  #years :global(.year h2 small) {
-    font-size: 0.95rem;
-    color: var(--dim);
-    font-style: italic;
-  }
-  #years :global(.big-number) {
-    font-family: var(--mono);
-    font-size: clamp(1.2rem, 4.5vw, 1.9rem);
-    color: var(--gold-2);
-    margin: 0;
-    overflow-wrap: anywhere;
-  }
-  :global(dl.facts) {
-    display: grid;
-    grid-template-columns: max-content 1fr;
-    gap: 0.35rem 1.2rem;
-    margin: 1rem 0;
-  }
-  :global(dl.facts dt) {
-    color: var(--dim);
-  }
-  :global(dl.facts dd) {
-    margin: 0;
-    min-width: 0;
-  }
-  @media (max-width: 34rem) {
-    :global(dl.facts) {
-      grid-template-columns: 1fr;
-      gap: 0.1rem;
-    }
-    :global(dl.facts dd) {
-      margin-bottom: 0.6rem;
-    }
-  }
-  #years :global(details) {
-    margin-top: 1.2rem;
-  }
-  #years :global(summary) {
-    cursor: pointer;
-    color: var(--gold);
-  }
-  #years :global(.entry) {
-    border-top: 1px solid var(--line);
-    padding: 0.9rem 0;
-  }
-  #years :global(.entry:first-child) {
-    border-top: 0;
-  }
-  #years :global(.entry header) {
-    display: flex;
-    gap: 0.4rem 1.2rem;
-    flex-wrap: wrap;
-    align-items: baseline;
+  .next {
+    font-size: 1.05rem;
   }
 </style>
 
 <script>
   import { drandRoundUrl } from '../shared/beacon';
   import { $, el, fmt, getJson, utc } from '../scripts/api';
-  import { verifyDrandInBrowser } from '../scripts/verify';
+  import { renderYear, renderYearList, type YearFull, type YearSummary } from '../scripts/year-view';
 
-  interface BeaconView {
-    committed_drand_round: number;
-    committed_drand_url: string;
-    source: string | null;
-    randomness: string | null;
-    proof: Record<string, unknown> | null;
-  }
-  interface YearView {
-    year: number;
-    window: { opens_at: string; closes_at: string };
-    closed_at: string | null;
-    number: { decimal: string; hex: string } | null;
-    bit: number | null;
-    beacon: {
-      number: BeaconView;
-      tiebreak: BeaconView & { derivation: { choices: string[]; index: number } | null };
-    };
-    tower: {
-      number: number;
-      move: string;
-      tally: Record<string, number>;
-      decided_by: string;
-      state_before: string;
-      state_after: string;
-      optimal_remaining: number;
-    } | null;
-    seals: { benchmark: { cpu: string; squaringsPerSecond: number; date: string }; t: Record<string, string> };
-    guestbook_count: number;
-  }
-  interface Entry {
-    id: number;
-    seal: string;
-    n_hex: string;
-    t: string;
-    iv_b64: string;
-    ciphertext_b64: string;
-    created_at: string;
+  interface ArchiveResponse {
+    latest: YearFull | null;
+    years: YearSummary[];
+    next: { year: number; opensAt: string; numberRound: number };
   }
 
-  const data = await getJson<{ years: YearView[]; next: { year: number; opensAt: string; closesAt: string; numberRound: number; tiebreakRound: number } }>('/api/archive');
+  const data = await getJson<ArchiveResponse>('/api/archive');
 
+  $('#latest').replaceChildren(
+    data.latest ? renderYear(data.latest) : el('p', { class: 'center dim' }, 'Aún no hay nada registrado.'),
+  );
+
+  const older = data.years.filter((y) => y.year !== data.latest?.year);
+  if (older.length) {
+    $('#year-list').replaceChildren(renderYearList(older));
+    $('#previous').hidden = false;
+  }
+
+  // The round for the next Number is already fixed, so nobody can choose it.
   const n = data.next;
-  $('#next').replaceChildren(
-    el('h2', {}, `Comprometido para ${n.year}`),
+  const next = $('#next');
+  next.replaceChildren(
+    el('h2', {}, `El Número de ${n.year}`),
     el(
       'p',
       {},
-      `El Número y el Bit de ${n.year} saldrán de la ronda `,
+      'Saldrá de la ronda ',
       el('a', { href: drandRoundUrl(n.numberRound) }, fmt(n.numberRound)),
-      ` de drand quicknet, emitida en la apertura, el ${utc(n.opensAt)}. Un empate al cierre lo romperá la ronda `,
-      el('a', { href: drandRoundUrl(n.tiebreakRound) }, fmt(n.tiebreakRound)),
-      `, del ${utc(n.closesAt)}.`,
+      ` de drand, que se publicará el ${utc(n.opensAt)}. Esa ronda está fijada desde ahora, así que nadie, ni siquiera nosotros, puede elegir el número.`,
     ),
   );
-
-  function sourceName(s: string | null): string {
-    if (s === 'drand') return 'drand quicknet';
-    if (s === 'nist') return 'Baliza de aleatoriedad del NIST (drand no respondió durante una hora)';
-    if (s === 'fake') return 'falsa (desarrollo)';
-    return 'aún no sorteado';
-  }
-
-  function beaconLink(b: BeaconView): Node {
-    if (b.source === 'nist' && b.proof?.uri) return el('a', { href: String(b.proof.uri) }, `pulso ${b.proof.pulseIndex} del NIST`);
-    return el('a', { href: drandRoundUrl(b.committed_drand_round) }, `ronda ${fmt(b.committed_drand_round)}`);
-  }
-
-  const SEAL_NAMES: Record<string, string> = { short: 'Corto', decade: 'Década', century: 'Siglo' };
-
-  const DECIDED: Record<string, string> = {
-    votes: 'la mayoría de votos',
-    tiebreak: 'un empate, roto por la ronda de cierre',
-    no_votes: 'sin votos; la ronda de cierre eligió entre todos los movimientos legales',
-  };
-
-  function yearCard(y: YearView): HTMLElement {
-    const facts = el('dl', { class: 'facts' });
-    const row = (k: string, ...v: (Node | string)[]) => facts.append(el('dt', {}, k), el('dd', {}, ...v));
-
-    row('Ventana', `${utc(y.window.opens_at)} hasta ${utc(y.window.closes_at)}`);
-    if (y.number) {
-      row('Bit', el('span', { class: 'mono' }, String(y.bit)));
-      row('Fuente', sourceName(y.beacon.number.source), ', ', beaconLink(y.beacon.number));
-      row('Aleatoriedad', el('span', { class: 'hex' }, y.beacon.number.randomness ?? ''));
-      row('Derivación', 'los primeros 8 bytes como entero sin signo de 64 bits; el Bit es el bit más bajo del último byte');
-    } else {
-      row('Número', `se sorteará de la ronda ${fmt(y.beacon.number.committed_drand_round)}`);
-    }
-
-    if (y.tower) {
-      row('Movimiento', el('strong', { class: 'mono' }, y.tower.move), ` (movimiento ${y.tower.number}), decidido por ${DECIDED[y.tower.decided_by] ?? y.tower.decided_by}`);
-      row('Conteo', el('span', { class: 'mono' }, Object.entries(y.tower.tally).map(([k, v]) => `${k}: ${v}`).join(' · ')));
-      row('Torre', el('span', { class: 'mono' }, `${y.tower.state_before} → ${y.tower.state_after}`), ` · ${fmt(y.tower.optimal_remaining)} movimientos óptimos restantes`);
-      const tb = y.beacon.tiebreak;
-      row('Desempate', sourceName(tb.source), ', ', beaconLink(tb), tb.randomness ? el('span', { class: 'hex' }, ` ${tb.randomness}`) : '');
-      if (tb.derivation) {
-        row('Derivación del desempate', `número mod ${tb.derivation.choices.length} = ${tb.derivation.index} → `, el('span', { class: 'mono' }, tb.derivation.choices.join(', ')), ` → ${tb.derivation.choices[tb.derivation.index]}`);
-      }
-    } else if (!y.closed_at) {
-      row('Movimiento', 'los votos están sellados hasta el cierre');
-    }
-    row('Sellos', el('span', { class: 'mono small' }, Object.entries(y.seals.t).map(([k, v]) => `${SEAL_NAMES[k] ?? k} T=${fmt(v)}`).join(' · ')), ` (${fmt(y.seals.benchmark.squaringsPerSecond)} cuadrados/s en ${y.seals.benchmark.cpu})`);
-    if (y.closed_at) row('Registro', el('a', { href: `/api/ledger/${y.year}.json` }, `${y.year}.json`));
-
-    const verifyOut = el('p', { class: 'small dim', 'aria-live': 'polite' });
-    const actions: Node[] = [];
-    if (y.number && y.beacon.number.source === 'drand' && y.beacon.number.randomness) {
-      const btn = el('button', { type: 'button' }, 'Verificar el Número en tu navegador');
-      btn.addEventListener('click', async () => {
-        btn.disabled = true;
-        verifyOut.textContent = 'Preguntando directamente a drand y revisando la firma…';
-        try {
-          verifyOut.textContent = await verifyDrandInBrowser(y.beacon.number.committed_drand_round, y.beacon.number.randomness!);
-          verifyOut.className = 'small success';
-        } catch (e) {
-          verifyOut.textContent = `No se pudo verificar: ${(e as Error).message}`;
-          verifyOut.className = 'small error';
-          btn.disabled = false;
-        }
-      });
-      actions.push(el('p', {}, btn), verifyOut);
-    }
-
-    const entries = el('details', {}, el('summary', {}, `El libro de visitas sellado: ${fmt(y.guestbook_count)} ${y.guestbook_count === 1 ? 'mensaje' : 'mensajes'}`));
-    let loaded = false;
-    entries.addEventListener('toggle', async () => {
-      if (loaded || !entries.open) return;
-      loaded = true;
-      const list = el('div', {}, el('p', { class: 'dim' }, 'Cargando…'));
-      entries.append(list);
-      const { entries: rows } = await getJson<{ entries: Entry[] }>(`/api/guestbook?year=${y.year}`);
-      list.replaceChildren(
-        ...(rows.length
-          ? rows.map((e) =>
-              el(
-                'div',
-                { class: 'entry', id: `entry-${e.id}` },
-                el('header', {}, el('strong', {}, `#${e.id}`), el('span', {}, `sello ${(SEAL_NAMES[e.seal] ?? e.seal).toLowerCase()}`), el('span', { class: 'mono small dim' }, `T = ${fmt(e.t)}`), el('span', { class: 'small faint' }, utc(e.created_at))),
-                el('details', {}, el('summary', { class: 'small' }, 'el acertijo'), el('p', { class: 'hex' }, `N = ${e.n_hex}`), el('p', { class: 'hex' }, `iv = ${e.iv_b64}`), el('p', { class: 'hex' }, `ciphertext = ${e.ciphertext_b64}`)),
-              ),
-            )
-          : [el('p', { class: 'dim' }, 'Nadie selló un mensaje este año.')]),
-      );
-    });
-
-    return el(
-      'section',
-      { class: 'panel year', id: `y${y.year}` },
-      el('h2', {}, `El Día de ${y.year}`, el('small', {}, y.closed_at ? 'cerrado' : 'abierto')),
-      y.number ? el('p', { class: 'eyebrow' }, 'El Número') : '',
-      y.number ? el('p', { class: 'big-number' }, fmt(y.number.decimal)) : '',
-      y.number ? el('p', { class: 'hex' }, y.number.hex) : '',
-      facts,
-      ...actions,
-      entries,
-    );
-  }
-
-  const years = $('#years');
-  years.replaceChildren(
-    ...(data.years.length
-      ? data.years.map(yearCard)
-      : [el('p', { class: 'center dim' }, 'Aún no hay nada registrado. El primer Día abre el 9 de octubre de 2026 a las 10:00 UTC.')]),
-  );
-  if (location.hash) document.querySelector(location.hash)?.scrollIntoView();
+  next.hidden = false;
 </script>

@@ -267,6 +267,7 @@ function renderGuestbook(s: StateResponse): void {
   if (s.you?.signed && !status.dataset.sealedId) {
     button.hidden = true;
     ($('#gb-text') as HTMLTextAreaElement).disabled = true;
+    ($('#gb-name') as HTMLInputElement).disabled = true;
     status.className = 'status success';
     status.textContent = 'Ya sellaste tu mensaje de este año.';
   } else if (!s.you?.signed) {
@@ -308,7 +309,8 @@ function wireGuestbook(): void {
       const captcha = await gbCaptcha;
       const token = await captcha.token();
       const sealed = await seal(message, BigInt(t));
-      const r = await postJson('/api/guestbook', { seal: sealName, ...sealed, captcha: token });
+      const name = ($('#gb-name') as HTMLInputElement).value.trim() || null;
+      const r = await postJson('/api/guestbook', { seal: sealName, name, ...sealed, captcha: token });
       captcha.reset();
       if (r.status === 200) {
         text.value = '';

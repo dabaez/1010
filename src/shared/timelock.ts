@@ -12,6 +12,8 @@
 // K and decrypt. Nothing but the T squarings is secret.
 
 export const MAX_MESSAGE_CHARS = 1000;
+/** The optional public name next to an entry; it is not sealed. */
+export const MAX_NAME_CHARS = 40;
 /** 1,000 characters of at most 4 UTF-8 bytes each, plus the 16-byte GCM tag. */
 export const MAX_CIPHERTEXT_BYTES = MAX_MESSAGE_CHARS * 4 + 16;
 export const MODULUS_BITS = 2048;

@@ -66,6 +66,10 @@ import Shrine from '../layouts/Shrine.astro';
       <textarea id="gb-text" maxlength="4000" placeholder="Para quien abra esto…"></textarea>
       <p class="counter mono small"><span id="gb-chars">0</span> / 1.000</p>
 
+      <label for="gb-name" class="eyebrow">Tu nombre (opcional)</label>
+      <input id="gb-name" type="text" maxlength="40" autocomplete="nickname" placeholder="Anónimo" />
+      <p class="small faint name-note">El nombre no se sella: se ve junto al mensaje desde hoy.</p>
+
       <fieldset class="seals">
         <legend class="eyebrow">Elige un sello</legend>
         <label class="seal-option"><input type="radio" name="seal" value="short" checked /><span><strong>Corto</strong><em>cerca de 1 año</em></span></label>
@@ -78,7 +82,7 @@ import Shrine from '../layouts/Shrine.astro';
       <p><button class="primary" id="gb-button" type="submit">Sellar</button></p>
       <p id="gb-status" class="status" aria-live="polite"></p>
     </form>
-    <p><a href="/archive/">Mensajes sellados →</a></p>
+    <p><a href="/guestbook/">Mensajes sellados →</a></p>
   </section>
 
   <section class="panel" id="number-panel" aria-labelledby="num-h">
@@ -205,6 +209,24 @@ import Shrine from '../layouts/Shrine.astro';
   }
   .captcha {
     margin: 1rem 0;
+  }
+  #gb-name {
+    width: 100%;
+    font: inherit;
+    font-size: 1.1rem;
+    color: var(--ink);
+    background: #0e0c09;
+    border: 1px solid var(--line-2);
+    border-radius: var(--radius);
+    padding: 0.55rem 0.9rem;
+    margin-top: 0.3rem;
+  }
+  #gb-name:focus {
+    border-color: var(--gold);
+    outline: none;
+  }
+  .name-note {
+    margin: 0.3rem 0 1.4rem;
   }
   .counter {
     text-align: right;

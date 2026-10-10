@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { currentOrNextWindow, isRitualOpen, latestOpenedWindow, windowFor } from '../src/shared/calendar';
+import { currentOrNextWindow, isRitualOpen, latestOpenedWindow, nextUnopenedWindow, windowFor } from '../src/shared/calendar';
 
 const t = (iso: string) => Date.parse(iso);
 
@@ -60,6 +60,12 @@ describe('next and latest windows', () => {
   });
   it('never counts down to a year before the first', () => {
     expect(currentOrNextWindow(t('2020-01-01T00:00:00Z')).year).toBe(2026);
+  });
+  it('points at the next Number still to be drawn', () => {
+    expect(nextUnopenedWindow(t('2026-10-09T09:59:59Z')).year).toBe(2026);
+    // While the Day is open its Number is already drawn: the next one is next year's.
+    expect(nextUnopenedWindow(t('2026-10-09T10:00:00Z')).year).toBe(2027);
+    expect(nextUnopenedWindow(t('2026-12-01T00:00:00Z')).year).toBe(2027);
   });
   it('knows the latest window that opened', () => {
     expect(latestOpenedWindow(t('2026-10-09T09:59:59Z'))).toBeNull();

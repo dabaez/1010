@@ -1,0 +1,47 @@
+---
+import Shrine from '../layouts/Shrine.astro';
+---
+
+<Shrine title="Libro de visitas" description="Los mensajes sellados del último Día del Rito Anual.">
+  <section class="center">
+    <p class="eyebrow" id="gb-year">&nbsp;</p>
+    <h1>Libro de visitas</h1>
+    <p class="dim lede" id="gb-status">&nbsp;</p>
+  </section>
+
+  <section class="panel">
+    <div id="gb-entries"><p class="dim">Cargando…</p></div>
+  </section>
+
+  <p class="center"><a href="/archive/">Libros de años anteriores →</a></p>
+</Shrine>
+
+<style>
+  .lede {
+    max-width: 34rem;
+    margin: 0 auto 2.5rem;
+  }
+</style>
+
+<script>
+  import { $, el, fetchState, fmt, getJson, utc } from '../scripts/api';
+  import { renderEntries, type Entry } from '../scripts/year-view';
+
+  const state = await fetchState();
+  const { year, entries } = await getJson<{ year: number | null; entries: Entry[] }>('/api/guestbook');
+
+  if (year === null) {
+    $('#gb-year').textContent = `El Día de ${state.window.year}`;
+    $('#gb-status').textContent = `Se abre el ${utc(state.window.opensAt)}.`;
+    $('#gb-entries').replaceChildren(el('p', { class: 'dim' }, 'Aún no hay mensajes.'));
+  } else {
+    $('#gb-year').textContent = `El Día de ${year}`;
+    const status = $('#gb-status');
+    if (state.phase === 'open') {
+      status.replaceChildren('Abierto hasta el ', utc(state.window.closesAt), '. ', el('a', { href: '/' }, 'Deja tu mensaje en el templo.'));
+    } else {
+      status.textContent = `${fmt(entries.length)} ${entries.length === 1 ? 'mensaje sellado' : 'mensajes sellados'}. Vuelve a abrirse el ${utc(state.window.opensAt)}.`;
+    }
+    $('#gb-entries').replaceChildren(renderEntries(entries));
+  }
+</script>

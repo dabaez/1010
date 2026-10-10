@@ -8,7 +8,7 @@ export type Seal = (typeof SEALS)[number];
 
 export const SEAL_YEARS: Record<Seal, number> = { short: 1, decade: 10, century: 100 };
 
-export const SEAL_LABELS: Record<Seal, string> = { short: 'Short', decade: 'Decade', century: 'Century' };
+export const SEAL_LABELS: Record<Seal, string> = { short: 'Corto', decade: 'Década', century: 'Siglo' };
 
 export interface SealTable {
   /** what was benchmarked, for the record */

@@ -1,7 +1,7 @@
 // Public views of the record: what the archive shows and what goes into
 // ledger/YYYY.json. Plain JSON, UTF-8 and hex only.
 
-import { asc, eq } from 'drizzle-orm';
+import { asc, desc, eq, sql } from 'drizzle-orm';
 import { DRAND_CHAIN, drandRoundUrl, pickIndex, u64Hex } from '../shared/beacon';
 import { windowFor } from '../shared/calendar';
 import type { SealTable } from '../shared/seals';
@@ -24,6 +24,7 @@ export function entryView(e: EntryRow) {
     id: e.id,
     year: e.year,
     seal: e.seal,
+    name: e.name,
     n_hex: e.n_hex,
     t: e.t,
     iv_b64: e.iv_b64,
@@ -91,22 +92,41 @@ export function yearView(row: YearRow, move: MoveRow | undefined, moveIndex: num
   };
 }
 
-/** Every year, newest first, as the archive shows it. */
-export function archive(db: DB) {
-  const rows = db.select().from(years).orderBy(asc(years.year)).all();
+/** One line per year, newest first: what the archive lists. */
+export function yearSummaries(db: DB) {
+  const rows = db.select().from(years).orderBy(desc(years.year)).all();
+  const moves = new Map(db.select().from(tower_moves).all().map((m) => [m.year, m]));
+  const counts = new Map(
+    db
+      .select({ year: guestbook.year, n: sql<number>`count(*)` })
+      .from(guestbook)
+      .groupBy(guestbook.year)
+      .all()
+      .map((r) => [r.year, r.n]),
+  );
+  return rows.map((row) => {
+    const n = row.number_u64 === null ? null : BigInt(row.number_u64);
+    const m = moves.get(row.year);
+    return {
+      year: row.year,
+      closed: !!row.closed_at,
+      number: n === null ? null : { decimal: n.toString(), hex: u64Hex(n) },
+      bit: row.bit,
+      move: m?.move ?? null,
+      decided_by: m?.decided_by ?? null,
+      guestbook_count: counts.get(row.year) ?? 0,
+    };
+  });
+}
+
+/** Everything about one year, with its sealed entries, as its archive page shows it. */
+export function yearFull(db: DB, year: number) {
+  const row = db.select().from(years).where(eq(years.year, year)).get();
+  if (!row) return null;
   const moves = db.select().from(tower_moves).orderBy(asc(tower_moves.year)).all();
-  const entries = db.select({ year: guestbook.year }).from(guestbook).all();
-  return rows
-    .map((row) => {
-      const i = moves.findIndex((m) => m.year === row.year);
-      return yearView(
-        row,
-        i >= 0 ? moves[i] : undefined,
-        i,
-        entries.filter((e) => e.year === row.year).length,
-      );
-    })
-    .reverse();
+  const i = moves.findIndex((m) => m.year === year);
+  const entries = entriesFor(db, year);
+  return { ...yearView(row, moves[i], i, entries.length), entries };
 }
 
 export function towerHistory(db: DB) {

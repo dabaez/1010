@@ -10,6 +10,10 @@ export default defineConfig({
   build: { format: 'directory' },
   vite: {
     build: { target: 'es2022' },
+    // drand-client is imported lazily (only when someone clicks Verificar).
+    // Without this, the dev server optimizes it on first use and that first
+    // import fails with "Outdated Optimize Dep".
+    optimizeDeps: { include: ['drand-client'] },
     server: {
       proxy: { '/api': 'http://127.0.0.1:8710' },
     },

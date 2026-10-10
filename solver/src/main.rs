@@ -44,6 +44,9 @@ struct Entry {
     year: Option<u32>,
     #[serde(default)]
     seal: Option<String>,
+    /// optional public name, never sealed
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    name: Option<String>,
     n_hex: String,
     #[serde(deserialize_with = "de_decimal")]
     t: String,
@@ -291,8 +294,9 @@ fn open(args: Args) {
         Err(_) => (Integer::new(), Integer::from(2), 0.0),
     };
 
+    let by = entry.name.as_deref().map(|n| format!(", firmado por {n}")).unwrap_or_default();
     let label = match (entry.id, entry.year, &entry.seal) {
-        (Some(id), Some(y), Some(s)) => format!("el mensaje {id}, sellado el Día de {y}, sello {}", seal_name(s)),
+        (Some(id), Some(y), Some(s)) => format!("el mensaje {id}{by}, sellado el Día de {y}, sello {}", seal_name(s)),
         (Some(id), _, _) => format!("el mensaje {id}"),
         _ => "un mensaje sin número".into(),
     };

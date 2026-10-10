@@ -64,7 +64,10 @@ solo la forma sellada sale de él. Nadie, ni siquiera quienes cuidan el sitio,
 puede leer un mensaje sin abrir su sello, así que los mensajes no se pueden
 moderar.
 
-Un mensaje es `N`, `T`, `iv` y `ciphertext`:
+Junto al mensaje se puede dejar un nombre de hasta 40 caracteres. El nombre
+**no** se sella: es público desde el momento en que se envía.
+
+Un mensaje sellado es `N`, `T`, `iv` y `ciphertext` (y el `name` opcional, en texto plano):
 
 - `N` es un módulo RSA de 2048 bits, el producto de dos primos que solo conoció
   el navegador de quien escribió. Se escribe en hexadecimal en minúsculas.

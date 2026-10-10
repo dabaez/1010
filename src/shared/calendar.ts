@@ -44,6 +44,13 @@ export function currentOrNextWindow(now: Date | number): RiteWindow {
   return t < w.closesAt ? w : windowFor(year + 1);
 }
 
+/** The next window that has not opened yet: the next Number still to be drawn. */
+export function nextUnopenedWindow(now: Date | number): RiteWindow {
+  const t = ms(now);
+  const year = Math.max(new Date(t).getUTCFullYear(), FIRST_YEAR);
+  return t < windowFor(year).opensAt ? windowFor(year) : windowFor(year + 1);
+}
+
 /** The latest window that has opened by `now`, or null before the first one. */
 export function latestOpenedWindow(now: Date | number): RiteWindow | null {
   const t = ms(now);
