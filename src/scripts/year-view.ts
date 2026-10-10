@@ -3,6 +3,7 @@
 
 import { drandRoundUrl } from '../shared/beacon';
 import { SEAL_LABELS, isSeal } from '../shared/seals';
+import { base64ToBytes } from '../shared/timelock';
 import { el, fmt, moveEl, tallyEl, utc } from './api';
 import { verifyDrandInBrowser } from './verify';
 
@@ -68,9 +69,16 @@ function sealName(seal: string): string {
 const date = (iso: string) =>
   new Date(iso).toLocaleDateString('es', { timeZone: 'UTC', day: 'numeric', month: 'long', year: 'numeric' });
 
-/** The sealed message itself: unreadable, shown as it is. Click to see all of it. */
+/**
+ * Bytes the server cannot check are shown in hex, not as the base64 they are
+ * stored in: anyone can pick base64 that spells words, but 0–9 and a–f say
+ * almost nothing.
+ */
+const b64ToHex = (b64: string) => Array.from(base64ToBytes(b64), (b) => b.toString(16).padStart(2, '0')).join('');
+
+/** The sealed message itself: unreadable, shown in hex. Click to see all of it. */
 function cipherText(b64: string): HTMLElement {
-  const p = el('p', { class: 'entry-cipher', title: 'Texto cifrado (clic para verlo entero)' }, b64);
+  const p = el('p', { class: 'entry-cipher', title: 'Texto cifrado, en hexadecimal (clic para verlo entero)' }, b64ToHex(b64));
   p.addEventListener('click', () => p.classList.toggle('expanded'));
   return p;
 }
@@ -95,7 +103,7 @@ export function renderEntries(entries: Entry[]): HTMLElement {
           el('summary', {}, 'el resto del acertijo'),
           el('p', { class: 'hex' }, `N = ${e.n_hex}`),
           el('p', { class: 'hex' }, `T = ${e.t}`),
-          el('p', { class: 'hex' }, `iv = ${e.iv_b64}`),
+          el('p', { class: 'hex' }, `iv = ${b64ToHex(e.iv_b64)}`),
         ),
       );
     }),
