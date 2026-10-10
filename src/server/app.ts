@@ -4,7 +4,7 @@
 import { getConnInfo } from '@hono/node-server/conninfo';
 import { Hono, type Context } from 'hono';
 import { isRitualOpen, currentOrNextWindow, nextUnopenedWindow, windowFor } from '../shared/calendar';
-import { isSeal, sealTableFor, SEAL_YEARS, SEALS } from '../shared/seals';
+import { isSeal, SEAL_YEARS, SEALS } from '../shared/seals';
 import { MAX_CIPHERTEXT_BYTES, MAX_NAME_CHARS, MODULUS_BITS } from '../shared/timelock';
 import { OPTIMAL_TOTAL, distanceToGoal, isComplete, legalMoves, moveName } from '../shared/tower';
 import type { Captcha } from './captcha';
@@ -22,6 +22,7 @@ import {
   latestYear,
   movesMade,
   myVote,
+  sealTableOf,
   tick,
   towerState,
   yearSecret,
@@ -114,7 +115,7 @@ export function createApp(deps: AppDeps) {
     const latest = latestYear(rite.db);
     const open = p === 'open';
     const voter = open ? identity(c, window.year) : null;
-    const table = sealTableFor(window.year);
+    const table = sealTableOf(rite.db, window.year);
     const shown = latest ? yearView(latest, undefined, -1, entriesFor(rite.db, latest.year).length) : null;
 
     return c.json({
@@ -239,7 +240,7 @@ export function createApp(deps: AppDeps) {
     const name = cleanName(g.body.name);
     if (name === false) return c.json({ error: `el nombre puede tener hasta ${MAX_NAME_CHARS} caracteres` }, 400);
     if (!isSeal(seal)) return c.json({ error: 'elige un sello: 1, 5, 50 o 1.000 años' }, 400);
-    if (String(t) !== sealTableFor(g.year).t[seal]) return c.json({ error: `T no coincide con el sello ${seal} de ${g.year}` }, 400);
+    if (String(t) !== sealTableOf(rite.db, g.year).t[seal]) return c.json({ error: `T no coincide con el sello ${seal} de ${g.year}` }, 400);
     if (typeof n_hex !== 'string' || !/^[0-9a-f]+$/.test(n_hex) || BigInt('0x' + n_hex).toString(2).length !== MODULUS_BITS) {
       return c.json({ error: `N debe ser un número de ${MODULUS_BITS} bits en hexadecimal en minúsculas` }, 400);
     }

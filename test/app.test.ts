@@ -1,5 +1,7 @@
+import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 import { cleanName } from '../src/server/app';
+import { years } from '../src/server/db/schema';
 import { ipPrefix, voterHash } from '../src/server/identity';
 import { LIMITS, RateLimiter } from '../src/server/ratelimit';
 import { loadConfig } from '../src/server/config';
@@ -116,6 +118,24 @@ describe('the sealed guestbook', () => {
       { seal: 'y50', ...sealed, t, ciphertext_b64: '!!' },
     ];
     for (const c of cases) expect((await post(h, '/api/guestbook', { ...c, captcha: 'ok' })).status, JSON.stringify(c).slice(0, 60)).toBe(400);
+  });
+
+  it('holds writers to the T table recorded when the year opened, not the code’s', async () => {
+    const h = harness({ at: MIDDLE });
+    await get(h, '/api/state'); // opens 2026
+    const recorded = sealTableFor(2026);
+    const t = '12345';
+    h.rite.db
+      .update(years)
+      .set({ seal_table: JSON.stringify({ ...recorded, t: { ...recorded.t, y1: t } }) })
+      .where(eq(years.year, 2026))
+      .run();
+    expect((await (await get(h, '/api/state')).json()).seals.y1.t).toBe(t);
+
+    const stale = await seal('con la tabla del código', BigInt(recorded.t.y1));
+    expect((await post(h, '/api/guestbook', { seal: 'y1', ...stale, captcha: 'ok' })).status).toBe(400);
+    const sealed = await seal('con la tabla registrada', BigInt(t));
+    expect((await post(h, '/api/guestbook', { seal: 'y1', ...sealed, captcha: 'ok' })).status).toBe(200);
   });
 
   it('is locked outside the Day', async () => {

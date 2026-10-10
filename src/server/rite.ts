@@ -10,7 +10,7 @@
 import { asc, desc, eq, isNull, sql } from 'drizzle-orm';
 import { firstRoundAtOrAfter, deriveBit, deriveNumber, pickIndex } from '../shared/beacon';
 import { FIRST_YEAR, isRitualOpen, windowFor } from '../shared/calendar';
-import { sealTableFor } from '../shared/seals';
+import { sealTableFor, type SealTable } from '../shared/seals';
 import { START_STATE, applyMove, isComplete, legalMoves, moveName, parseMove } from '../shared/tower';
 import type { Beacon, BeaconReading } from './beacon';
 import type { DB } from './db/client';
@@ -64,6 +64,16 @@ export function yearSecret(db: DB, year: number): string | null {
 
 export function getYear(db: DB, year: number): YearRow | undefined {
   return db.select().from(years).where(eq(years.year, year)).get();
+}
+
+/**
+ * The seal T table a year runs under: the one recorded in its row when it
+ * opened, which is what its ledger publishes, or the code's for a year that
+ * has not opened yet.
+ */
+export function sealTableOf(db: DB, year: number): SealTable {
+  const row = getYear(db, year);
+  return row ? (JSON.parse(row.seal_table) as SealTable) : sealTableFor(year);
 }
 
 export function latestYear(db: DB): YearRow | undefined {
