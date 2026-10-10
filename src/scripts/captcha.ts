@@ -19,7 +19,7 @@ function loadScript(): Promise<void> {
     s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
     s.async = true;
     s.onload = () => resolve();
-    s.onerror = () => reject(new Error('could not load the captcha'));
+    s.onerror = () => reject(new Error('no se pudo cargar el captcha'));
     document.head.append(s);
   });
   return loading;

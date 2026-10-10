@@ -92,6 +92,6 @@ describe('seal and open', () => {
       encoding: 'utf8',
     });
     expect(r.status).not.toBe(0);
-    expect(r.stderr).toContain('decryption failed');
+    expect(r.stderr).toContain('falló el descifrado');
   });
 });

@@ -42,7 +42,7 @@ export function drawTower(svg: SVGSVGElement, state: string, opts: DrawOptions =
   svg.setAttribute(
     'aria-label',
     opts.label ??
-      `Tower state ${state}: ` + PEGS.map((p) => `peg ${p} holds ${stacks(state)[p].length} rings`).join(', '),
+      `Estado de la torre ${state}: ` + PEGS.map((p) => `el poste ${p} tiene ${stacks(state)[p].length} anillos`).join(', '),
   );
   svg.replaceChildren();
 

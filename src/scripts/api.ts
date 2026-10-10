@@ -72,7 +72,10 @@ export async function postJson(path: string, body: unknown): Promise<{ status: n
   return { status: res.status, data };
 }
 
-export const fmt = (n: number | bigint | string) => BigInt(n).toLocaleString('en-US');
+// Spanish groups thousands with dots; 'always' makes 4095 read 4.095 too.
+// (TypeScript's lib types useGrouping as boolean only.)
+const numbers = new Intl.NumberFormat('es', { useGrouping: 'always' } as unknown as Intl.NumberFormatOptions);
+export const fmt = (n: number | bigint | string) => numbers.format(BigInt(n));
 
 export function splitDuration(ms: number) {
   const s = Math.max(0, Math.floor(ms / 1000));
@@ -85,7 +88,7 @@ export function pad(n: number, w = 2): string {
 
 export function utc(iso: string): string {
   const d = new Date(iso);
-  return d.toLocaleString('en-GB', {
+  return d.toLocaleString('es', {
     timeZone: 'UTC',
     day: 'numeric',
     month: 'long',
@@ -97,7 +100,7 @@ export function utc(iso: string): string {
 
 /** A rough human duration for T squarings at the published rate. */
 export function humanYears(years: number): string {
-  return years === 1 ? 'about a year' : `about ${years} years`;
+  return years === 1 ? 'cerca de un año' : `cerca de ${years} años`;
 }
 
 export function $(sel: string, root: ParentNode = document): HTMLElement {

@@ -33,7 +33,7 @@ async function refresh(): Promise<void> {
     state = await fetchState();
     render();
   } catch {
-    $('#hero-sub').textContent = 'The shrine is silent for a moment. Trying again…';
+    $('#hero-sub').textContent = 'El templo guarda silencio un momento. Reintentando…';
     setTimeout(() => void refresh(), 5_000);
   } finally {
     refreshing = false;
@@ -96,32 +96,32 @@ function renderHero(s: StateResponse): void {
   const thisYear = s.year && s.year.year === s.window.year ? s.year : null;
 
   if (s.phase === 'sealed') {
-    eyebrow.textContent = `The Day of ${s.window.year}`;
-    title.textContent = 'The shrine is sealed.';
+    eyebrow.textContent = `El Día de ${s.window.year}`;
+    title.textContent = 'El templo está sellado.';
     sub.innerHTML = '';
     sub.append(
-      'Until it opens on ',
+      'Hasta que abra el ',
       el('strong', {}, utc(s.window.opensAt)),
-      ', when October 10 begins in UTC+14.',
+      ', cuando empieza el 10 de octubre en UTC+14.',
     );
     ceremony.hidden = true;
     countdown.hidden = false;
   } else if (s.phase === 'open') {
-    eyebrow.textContent = `The Day of ${s.window.year} · open`;
-    title.textContent = 'The Rite is open.';
+    eyebrow.textContent = `El Día de ${s.window.year} · abierto`;
+    title.textContent = 'El Rito está abierto.';
     sub.innerHTML = '';
     sub.append(
-      'Left to vote and to sign. It closes on ',
+      'Para votar y firmar. Cierra el ',
       el('strong', {}, utc(s.window.closesAt)),
-      ', when October 10 ends in UTC−12.',
+      ', cuando termina el 10 de octubre en UTC−12.',
     );
     ceremony.hidden = false;
     countdown.hidden = false;
     renderCeremony(thisYear);
   } else if (s.phase === 'closing') {
-    eyebrow.textContent = `The Day of ${s.year?.year ?? ''} · closed`;
-    title.textContent = 'The Rite has closed.';
-    sub.textContent = 'The votes are being counted and the move is being made…';
+    eyebrow.textContent = `El Día de ${s.year?.year ?? ''} · cerrado`;
+    title.textContent = 'El Rito ha cerrado.';
+    sub.textContent = 'Se están contando los votos y haciendo el movimiento…';
     ceremony.hidden = !s.year?.number;
     countdown.hidden = true;
     renderCeremony(s.year);
@@ -142,12 +142,12 @@ function renderCeremony(y: StateResponse['year']): void {
     dec.classList.add('drawing');
     hex.textContent = '0x················';
     bit.textContent = '·';
-    source.textContent = `Drawing from drand round ${fmt(y.round)}…`;
+    source.textContent = `Sacando de la ronda ${fmt(y.round)} de drand…`;
     if (rolling === null) {
       rolling = window.setInterval(() => {
         let digits = '';
         for (let i = 0; i < 20; i++) digits += Math.floor(Math.random() * 10);
-        dec.textContent = BigInt(digits).toLocaleString('en-US');
+        dec.textContent = fmt(digits);
       }, 70);
     }
     return;
@@ -168,7 +168,7 @@ function renderCeremony(y: StateResponse['year']): void {
   bit.textContent = String(y.bit);
   source.innerHTML = '';
   source.append(
-    y.source === 'drand' ? 'From drand round ' : y.source === 'nist' ? 'From the NIST beacon (drand was unreachable), committed round ' : 'From round ',
+    y.source === 'drand' ? 'De la ronda de drand ' : y.source === 'nist' ? 'De la baliza del NIST (drand no respondía); ronda comprometida ' : 'De la ronda ',
     el('a', { href: drandRoundUrl(y.round) }, fmt(y.round)),
     '.',
   );
@@ -221,7 +221,7 @@ function renderTower(s: StateResponse): void {
   if (voted) {
     button.hidden = true;
     status.className = 'status success';
-    status.textContent = `Your vote, ${voted}, is sealed until the close.`;
+    status.textContent = `Tu voto, ${voted}, queda sellado hasta el cierre.`;
   } else {
     button.disabled = !selectedMove;
     voteCaptcha ??= mountCaptcha($('#vote-captcha'), s.captcha?.siteKey ?? null);
@@ -235,11 +235,11 @@ function wireBallot(): void {
     if (!selectedMove || !voteCaptcha) return;
     button.disabled = true;
     status.className = 'status dim';
-    status.textContent = 'Waiting for the captcha…';
+    status.textContent = 'Esperando el captcha…';
     try {
       const captcha = await voteCaptcha;
       const token = await captcha.token();
-      status.textContent = 'Casting…';
+      status.textContent = 'Votando…';
       const r = await postJson('/api/vote', { move: selectedMove, captcha: token });
       captcha.reset();
       if (r.status === 200) {
@@ -247,7 +247,7 @@ function wireBallot(): void {
         await refresh();
       } else {
         status.className = 'status error';
-        status.textContent = r.data?.error ?? `Something went wrong (HTTP ${r.status}).`;
+        status.textContent = r.data?.error ?? `Algo salió mal (HTTP ${r.status}).`;
         button.disabled = false;
         if (r.status === 409 || r.status === 423) await refresh();
       }
@@ -264,7 +264,7 @@ function wireBallot(): void {
 function renderGuestbook(s: StateResponse): void {
   const count = s.year && s.year.year === s.window.year ? s.year.guestbookCount : 0;
   $('#gb-count').textContent = fmt(count);
-  $('#gb-count-label').textContent = count === 1 ? 'entry' : 'entries';
+  $('#gb-count-label').textContent = count === 1 ? 'mensaje sellado' : 'mensajes sellados';
   const open = s.phase === 'open';
   $('#gb-closed').hidden = open;
   const form = $('#gb-form');
@@ -274,24 +274,24 @@ function renderGuestbook(s: StateResponse): void {
     const code = document.querySelector(`[data-t="${k}"]`);
     if (code) code.textContent = `T = ${fmt(v.t)}`;
   }
-  $('#gb-bench').textContent = `T is ${fmt(s.sealBenchmark.squaringsPerSecond)} squarings per second (${s.sealBenchmark.cpu}, ${s.sealBenchmark.date}) times the target time.`;
+  $('#gb-bench').textContent = `T es ${fmt(s.sealBenchmark.squaringsPerSecond)} cuadrados por segundo (${s.sealBenchmark.cpu}, ${s.sealBenchmark.date}) por el tiempo objetivo.`;
   const button = $('#gb-button') as HTMLButtonElement;
   const status = $('#gb-status');
   if (s.you?.signed && !status.dataset.sealedId) {
     button.hidden = true;
     ($('#gb-text') as HTMLTextAreaElement).disabled = true;
     status.className = 'status success';
-    status.textContent = 'You have sealed your entry for this year.';
+    status.textContent = 'Ya sellaste tu mensaje de este año.';
   } else if (!s.you?.signed) {
     gbCaptcha ??= mountCaptcha($('#gb-captcha'), s.captcha?.siteKey ?? null);
   }
 }
 
 const STEP_TEXT: Record<SealStep | 'send', string> = {
-  keygen: 'Forging a 2048-bit modulus N from two fresh primes',
-  shortcut: 'Taking the shortcut only the sealer has: 2^(2^T) mod N, through φ(N)',
-  encrypt: 'Encrypting with AES-256-GCM under SHA-256 of the result',
-  send: 'Sending N, T and the ciphertext; the primes are forgotten',
+  keygen: 'Forjando un módulo N de 2048 bits a partir de dos primos nuevos',
+  shortcut: 'Tomando el atajo que solo tiene quien sella: 2^(2^T) mod N, a través de φ(N)',
+  encrypt: 'Cifrando con AES-256-GCM bajo el SHA-256 del resultado',
+  send: 'Enviando N, T y el texto cifrado; los primos se olvidan',
 };
 
 function wireGuestbook(): void {
@@ -316,7 +316,7 @@ function wireGuestbook(): void {
     const n = messageLength(message);
     if (n === 0 || n > MAX_MESSAGE_CHARS) {
       status.className = 'status error';
-      status.textContent = n === 0 ? 'Write something first.' : `That is ${fmt(n)} characters; the limit is 1,000.`;
+      status.textContent = n === 0 ? 'Escribe algo primero.' : `Son ${fmt(n)} caracteres; el límite es 1.000.`;
       return;
     }
     const sealName = (form.querySelector('input[name="seal"]:checked') as HTMLInputElement).value as keyof StateResponse['seals'];
@@ -352,13 +352,13 @@ function wireGuestbook(): void {
         status.className = 'status success';
         status.innerHTML = '';
         status.append(
-          `Sealed as entry #${r.data.id}. Opening it will take ${state.seals[sealName].years === 1 ? 'about a year' : `about ${state.seals[sealName].years} years`} of squaring on today's fastest desktop: `,
+          `Sellado como el mensaje #${r.data.id}. Abrirlo tomará ${state.seals[sealName].years === 1 ? 'cerca de un año' : `cerca de ${state.seals[sealName].years} años`} de cuadrados en el computador de escritorio más rápido de hoy: `,
           el('code', {}, `rite-solver open ${r.data.id}`),
         );
         button.hidden = true;
         await refresh();
       } else {
-        throw new Error(r.data?.error ?? `Something went wrong (HTTP ${r.status}).`);
+        throw new Error(r.data?.error ?? `Algo salió mal (HTTP ${r.status}).`);
       }
     } catch (err) {
       status.className = 'status error';
@@ -382,34 +382,34 @@ function renderNumber(s: StateResponse): void {
   if (y?.number && y.randomness) {
     const dl = el('dl');
     const row = (k: string, ...v: (Node | string)[]) => dl.append(el('dt', {}, k), el('dd', {}, ...v));
-    row('Year', String(y.year));
-    row('Number', el('span', { class: 'mono' }, fmt(y.number.decimal)));
+    row('Año', String(y.year));
+    row('Número', el('span', { class: 'mono' }, fmt(y.number.decimal)));
     row('Hex', el('span', { class: 'mono' }, y.number.hex));
     row('Bit', el('span', { class: 'mono' }, String(y.bit)));
-    row('Source', y.source === 'nist' ? 'NIST Randomness Beacon (fallback)' : y.source === 'drand' ? 'drand quicknet' : String(y.source));
-    row('Round', el('a', { href: drandRoundUrl(y.round) }, fmt(y.round)));
-    row('Randomness', el('span', { class: 'hex' }, y.randomness));
+    row('Fuente', y.source === 'nist' ? 'Baliza de aleatoriedad del NIST (respaldo)' : y.source === 'drand' ? 'drand quicknet' : String(y.source));
+    row('Ronda', el('a', { href: drandRoundUrl(y.round) }, fmt(y.round)));
+    row('Aleatoriedad', el('span', { class: 'hex' }, y.randomness));
     row(
-      'Derivation',
-      'The first 8 bytes of the randomness as an unsigned 64-bit integer: ',
+      'Derivación',
+      'Los primeros 8 bytes de la aleatoriedad, como entero sin signo de 64 bits: ',
       el('span', { class: 'mono' }, `${y.randomness.slice(0, 16)} = ${u64Hex(BigInt(y.number.decimal))}`),
-      '. The Bit is the lowest bit of the last byte, ',
+      '. El Bit es el bit más bajo del último byte, ',
       el('span', { class: 'mono' }, `0x${y.randomness.slice(-2)}`),
       '.',
     );
     parts.push(dl);
     if (y.source === 'drand') {
       const out = el('p', { class: 'small dim', 'aria-live': 'polite' });
-      const btn = el('button', { type: 'button' }, 'Verify it in your browser');
+      const btn = el('button', { type: 'button' }, 'Verificarlo en tu navegador');
       btn.addEventListener('click', async () => {
         btn.disabled = true;
         out.className = 'small dim';
-        out.textContent = 'Asking drand directly and checking the signature…';
+        out.textContent = 'Preguntando directamente a drand y revisando la firma…';
         try {
           out.textContent = await verifyDrandInBrowser(y.round, y.randomness!);
           out.className = 'small success';
         } catch (e) {
-          out.textContent = `Could not verify: ${(e as Error).message}`;
+          out.textContent = `No se pudo verificar: ${(e as Error).message}`;
           out.className = 'small error';
           btn.disabled = false;
         }
@@ -423,11 +423,11 @@ function renderNumber(s: StateResponse): void {
       el(
         'p',
         {},
-        `The Number and the Bit of ${c.year} will be decided by drand quicknet round `,
+        `El Número y el Bit de ${c.year} los decidirá la ronda `,
         el('a', { href: drandRoundUrl(c.numberRound) }, fmt(c.numberRound)),
-        `, emitted the moment the Day opens (${utc(c.opensAt)}). A tower tie at the close is broken by round `,
+        ` de drand quicknet, emitida en el instante en que abre el Día (${utc(c.opensAt)}). Un empate en la torre al cierre lo rompe la ronda `,
         el('a', { href: drandRoundUrl(c.tiebreakRound) }, fmt(c.tiebreakRound)),
-        ` (${utc(c.closesAt)}), which nobody can know while the votes are open.`,
+        ` (${utc(c.closesAt)}), que nadie puede conocer mientras la votación está abierta.`,
       ),
     );
   }

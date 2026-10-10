@@ -4,106 +4,109 @@ import Shrine from '../layouts/Shrine.astro';
 
 <Shrine>
   <noscript>
-    <p class="note">The shrine needs JavaScript to keep time with the server and to seal messages in your browser.</p>
+    <p class="note">El templo necesita JavaScript para sincronizarse con el servidor y sellar mensajes en tu navegador.</p>
   </noscript>
 
   <!-- The hero changes with the phase: a countdown while sealed, the opening ceremony on the Day. -->
   <section id="hero" class="hero center" data-phase="loading" aria-live="polite">
     <p class="eyebrow" id="hero-eyebrow">&nbsp;</p>
-    <h1 id="hero-title">The shrine</h1>
+    <h1 id="hero-title">El templo</h1>
 
     <div id="ceremony" class="ceremony" hidden>
-      <p class="eyebrow">The Number of <span data-year></span></p>
-      <p class="number mono" id="number-dec" aria-label="The Number of the year">&nbsp;</p>
+      <p class="eyebrow">El Número de <span data-year></span></p>
+      <p class="number mono" id="number-dec" aria-label="El Número del año">&nbsp;</p>
       <p class="number-hex mono" id="number-hex">&nbsp;</p>
       <div class="bit-row">
-        <span class="eyebrow">The Bit</span>
+        <span class="eyebrow">El Bit</span>
         <span class="bit mono" id="bit">·</span>
       </div>
       <p class="dim small" id="ceremony-source">&nbsp;</p>
     </div>
 
     <div class="countdown mono" id="countdown" role="timer" aria-live="off">
-      <div><span data-u="d">--</span><small>days</small></div>
-      <div><span data-u="h">--</span><small>hours</small></div>
-      <div><span data-u="m">--</span><small>minutes</small></div>
-      <div><span data-u="s">--</span><small>seconds</small></div>
+      <div><span data-u="d">--</span><small>días</small></div>
+      <div><span data-u="h">--</span><small>horas</small></div>
+      <div><span data-u="m">--</span><small>minutos</small></div>
+      <div><span data-u="s">--</span><small>segundos</small></div>
     </div>
     <p id="hero-sub" class="dim">&nbsp;</p>
   </section>
 
   <section class="panel" id="tower-panel" aria-labelledby="tower-h">
-    <h2 id="tower-h"><span class="numeral">I</span>The Tower</h2>
+    <h2 id="tower-h"><span class="numeral">I</span>La Torre</h2>
     <p class="dim">
-      Twelve rings, three pegs. Each Day the visitors vote and exactly one ring moves. When all twelve stand on C,
-      programming is over. Played perfectly that takes 4,095 years: the year 6121 at the earliest.
+      Doce anillos, tres postes. Cada Día los visitantes votan y se mueve exactamente un anillo. Cuando los doce estén
+      en C, la programación habrá terminado. Jugando a la perfección toma 4.095 años: el año 6121, como muy pronto.
     </p>
     <svg id="tower-svg" class="tower-svg"></svg>
     <p class="stat-row">
-      <span>Moves made: <strong id="moves-made">–</strong>.</span>
-      <span>Optimal moves remaining: <strong id="optimal-remaining">–</strong>.</span>
+      <span>Movimientos hechos: <strong id="moves-made">–</strong>.</span>
+      <span>Movimientos óptimos restantes: <strong id="optimal-remaining">–</strong>.</span>
     </p>
 
     <div id="ballot" hidden>
       <hr class="thin" />
-      <h3>The ballot of <span data-year></span></h3>
+      <h3>La votación de <span data-year></span></h3>
       <p class="dim">
-        These are the only legal moves. Votes stay hidden until the window closes; then the move with the most votes
-        is made. Nothing here tells you which move is wise. The crowd is on its own.
+        Estos son los únicos movimientos legales. Los votos quedan ocultos hasta que se cierre el Día; entonces se hace
+        el movimiento con más votos. Nada aquí te dice cuál es el sabio. La multitud está sola.
       </p>
-      <div class="moves" id="moves" role="radiogroup" aria-label="Legal moves"></div>
+      <div class="moves" id="moves" role="radiogroup" aria-label="Movimientos legales"></div>
       <div class="captcha" id="vote-captcha"></div>
-      <p><button class="primary" id="vote-button" disabled>Cast your vote</button></p>
+      <p><button class="primary" id="vote-button" disabled>Votar</button></p>
       <p id="vote-status" class="status" aria-live="polite"></p>
     </div>
-    <p><a href="/tower/">The full history of moves →</a></p>
+    <p><a href="/tower/">Toda la historia de movimientos →</a></p>
   </section>
 
   <section class="panel" id="guestbook-panel" aria-labelledby="gb-h">
-    <h2 id="gb-h"><span class="numeral">II</span>The Sealed Guestbook</h2>
+    <h2 id="gb-h"><span class="numeral">II</span>El Libro de Visitas Sellado</h2>
     <p class="dim">
-      Each message is sealed in your browser inside a time-lock puzzle. Anyone can open it, but only by squaring a number
-      over and over, trillions of times in a row. More computers do not help; only a faster one does. It is not
-      quantum-safe: a large enough quantum computer would open every seal at once.
+      Cada mensaje se sella en tu navegador dentro de un acertijo de bloqueo temporal. Cualquiera puede abrirlo, pero
+      solo elevando un número al cuadrado una y otra vez, billones de veces seguidas. Más computadores no ayudan; solo
+      uno más rápido. No resiste a la computación cuántica: un computador cuántico lo bastante grande abriría todos los
+      sellos de una vez.
     </p>
 
     <div id="gb-closed">
-      <p><strong id="gb-count">–</strong> <span id="gb-count-label">entries</span> sealed so far. The guestbook opens on the Day.</p>
+      <p><strong id="gb-count">–</strong> <span id="gb-count-label">mensajes sellados</span> hasta ahora. El libro se abre el Día.</p>
     </div>
 
     <form id="gb-form" hidden>
-      <label for="gb-text" class="eyebrow">Your message</label>
-      <textarea id="gb-text" maxlength="4000" placeholder="To whoever opens this…"></textarea>
-      <p class="counter mono small"><span id="gb-chars">0</span> / 1,000</p>
+      <label for="gb-text" class="eyebrow">Tu mensaje</label>
+      <textarea id="gb-text" maxlength="4000" placeholder="Para quien abra esto…"></textarea>
+      <p class="counter mono small"><span id="gb-chars">0</span> / 1.000</p>
 
       <fieldset class="seals">
-        <legend class="eyebrow">Choose a seal</legend>
-        <label class="seal-option"><input type="radio" name="seal" value="short" checked /><span><strong>Short</strong><em>about 1 year</em><code data-t="short"></code></span></label>
-        <label class="seal-option"><input type="radio" name="seal" value="decade" /><span><strong>Decade</strong><em>about 10 years</em><code data-t="decade"></code></span></label>
-        <label class="seal-option"><input type="radio" name="seal" value="century" /><span><strong>Century</strong><em>about 100 years</em><code data-t="century"></code></span></label>
+        <legend class="eyebrow">Elige un sello</legend>
+        <label class="seal-option"><input type="radio" name="seal" value="short" checked /><span><strong>Corto</strong><em>cerca de 1 año</em><code data-t="short"></code></span></label>
+        <label class="seal-option"><input type="radio" name="seal" value="decade" /><span><strong>Década</strong><em>cerca de 10 años</em><code data-t="decade"></code></span></label>
+        <label class="seal-option"><input type="radio" name="seal" value="century" /><span><strong>Siglo</strong><em>cerca de 100 años</em><code data-t="century"></code></span></label>
       </fieldset>
       <p class="small faint" id="gb-bench"></p>
 
       <p class="note">
-        Nobody can read the entries, including us, so they cannot be moderated. Only ciphertext ever leaves your
-        browser. One entry per person per year, up to 1,000 characters. Seals tend to fall early as computers get faster.
+        Nadie puede leer los mensajes, ni siquiera nosotros, así que no se pueden moderar. Solo el texto cifrado sale de
+        tu navegador. Un mensaje por persona al año, de hasta 1.000 caracteres. Los sellos suelen caer antes de tiempo, a
+        medida que los computadores se vuelven más rápidos.
       </p>
       <div class="captcha" id="gb-captcha"></div>
-      <p><button class="primary" id="gb-button" type="submit">Seal it</button></p>
+      <p><button class="primary" id="gb-button" type="submit">Sellar</button></p>
       <ol class="steps small" id="gb-steps" hidden></ol>
       <p id="gb-status" class="status" aria-live="polite"></p>
     </form>
-    <p><a href="/archive/">The archive of sealed entries →</a> · <a href="/solver/">How to open one →</a></p>
+    <p><a href="/archive/">El archivo de mensajes sellados →</a> · <a href="/solver/">Cómo abrir uno →</a></p>
   </section>
 
   <section class="panel" id="number-panel" aria-labelledby="num-h">
-    <h2 id="num-h"><span class="numeral">III</span>The Number and the Bit</h2>
+    <h2 id="num-h"><span class="numeral">III</span>El Número y el Bit</h2>
     <p class="dim">
-      Each Day has a random number and a random bit, taken from the drand beacon run by the League of Entropy. We do
-      not choose them: the round that decides them is published a year in advance, and anyone can check it.
+      Cada Día tiene un número aleatorio y un bit aleatorio, tomados de la baliza drand que mantiene la League of
+      Entropy. No los elegimos nosotros: la ronda que los decide se publica con un año de anticipación, y cualquiera
+      puede verificarla.
     </p>
     <div id="number-details"></div>
-    <p><a href="/archive/">Every year's Number and Bit →</a></p>
+    <p><a href="/archive/">El Número y el Bit de cada año →</a></p>
   </section>
 </Shrine>
 

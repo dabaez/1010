@@ -2,19 +2,19 @@
 import Shrine from '../layouts/Shrine.astro';
 ---
 
-<Shrine title="Archive" description="Every year of the Annual Rite: the Number and the Bit with their beacon rounds, the vote tallies, and the sealed guestbook puzzles." wide>
+<Shrine title="Archivo" description="Cada año del Rito Anual: el Número y el Bit con sus rondas de la baliza, los conteos de votos y los acertijos del libro de visitas sellado." wide>
   <section class="center">
-    <p class="eyebrow">The record</p>
-    <h1>Archive</h1>
+    <p class="eyebrow">El registro</p>
+    <h1>Archivo</h1>
     <p class="dim lede">
-      Every year's Number and Bit with the rounds that decided them, every tally, and every sealed entry. The same
-      record is written each year to a public ledger, so the Rite can outlive this site.
+      El Número y el Bit de cada año con las rondas que los decidieron, cada conteo y cada mensaje sellado. El mismo
+      registro se escribe cada año en un repositorio público, para que el Rito pueda sobrevivir a este sitio.
     </p>
   </section>
 
   <section class="panel" id="next">
-    <h2>Committed in advance</h2>
-    <p class="dim">Loading…</p>
+    <h2>Comprometido de antemano</h2>
+    <p class="dim">Cargando…</p>
   </section>
 
   <div id="years"></div>
@@ -136,84 +136,86 @@ import Shrine from '../layouts/Shrine.astro';
 
   const n = data.next;
   $('#next').replaceChildren(
-    el('h2', {}, `Committed for ${n.year}`),
+    el('h2', {}, `Comprometido para ${n.year}`),
     el(
       'p',
       {},
-      `The Number and the Bit of ${n.year} will come from drand quicknet round `,
+      `El Número y el Bit de ${n.year} saldrán de la ronda `,
       el('a', { href: drandRoundUrl(n.numberRound) }, fmt(n.numberRound)),
-      `, emitted at the opening, ${utc(n.opensAt)}. A tie at the close will be broken by round `,
+      ` de drand quicknet, emitida en la apertura, el ${utc(n.opensAt)}. Un empate al cierre lo romperá la ronda `,
       el('a', { href: drandRoundUrl(n.tiebreakRound) }, fmt(n.tiebreakRound)),
-      `, at ${utc(n.closesAt)}.`,
+      `, del ${utc(n.closesAt)}.`,
     ),
     el(
       'p',
       { class: 'dim small' },
-      `Round = floor((t − ${DRAND_CHAIN.genesis}) / ${DRAND_CHAIN.period}) + 1 for chain `,
+      `Ronda = floor((t − ${DRAND_CHAIN.genesis}) / ${DRAND_CHAIN.period}) + 1 para la cadena `,
       el('span', { class: 'hex' }, DRAND_CHAIN.hash),
-      '. Those links will answer once the rounds exist.',
+      '. Esos enlaces responderán cuando las rondas existan.',
     ),
   );
 
   function sourceName(s: string | null): string {
     if (s === 'drand') return 'drand quicknet';
-    if (s === 'nist') return 'NIST Randomness Beacon (drand was unreachable for an hour)';
-    if (s === 'fake') return 'fake (development)';
-    return 'not yet drawn';
+    if (s === 'nist') return 'Baliza de aleatoriedad del NIST (drand no respondió durante una hora)';
+    if (s === 'fake') return 'falsa (desarrollo)';
+    return 'aún no sorteado';
   }
 
   function beaconLink(b: BeaconView): Node {
-    if (b.source === 'nist' && b.proof?.uri) return el('a', { href: String(b.proof.uri) }, `NIST pulse ${b.proof.pulseIndex}`);
-    return el('a', { href: drandRoundUrl(b.committed_drand_round) }, `round ${fmt(b.committed_drand_round)}`);
+    if (b.source === 'nist' && b.proof?.uri) return el('a', { href: String(b.proof.uri) }, `pulso ${b.proof.pulseIndex} del NIST`);
+    return el('a', { href: drandRoundUrl(b.committed_drand_round) }, `ronda ${fmt(b.committed_drand_round)}`);
   }
 
+  const SEAL_NAMES: Record<string, string> = { short: 'Corto', decade: 'Década', century: 'Siglo' };
+
   const DECIDED: Record<string, string> = {
-    votes: 'the most votes',
-    tiebreak: 'a tie, broken by the close round',
-    no_votes: 'no votes; the close round chose among all legal moves',
+    votes: 'la mayoría de votos',
+    tiebreak: 'un empate, roto por la ronda de cierre',
+    no_votes: 'sin votos; la ronda de cierre eligió entre todos los movimientos legales',
   };
 
   function yearCard(y: YearView): HTMLElement {
     const facts = el('dl', { class: 'facts' });
     const row = (k: string, ...v: (Node | string)[]) => facts.append(el('dt', {}, k), el('dd', {}, ...v));
 
-    row('Window', `${utc(y.window.opens_at)} to ${utc(y.window.closes_at)}`);
+    row('Ventana', `${utc(y.window.opens_at)} hasta ${utc(y.window.closes_at)}`);
     if (y.number) {
       row('Bit', el('span', { class: 'mono' }, String(y.bit)));
-      row('Source', sourceName(y.beacon.number.source), ', ', beaconLink(y.beacon.number));
-      row('Randomness', el('span', { class: 'hex' }, y.beacon.number.randomness ?? ''));
-      row('Derivation', 'first 8 bytes as an unsigned 64-bit integer; the Bit is the lowest bit of the last byte');
+      row('Fuente', sourceName(y.beacon.number.source), ', ', beaconLink(y.beacon.number));
+      row('Aleatoriedad', el('span', { class: 'hex' }, y.beacon.number.randomness ?? ''));
+      row('Derivación', 'los primeros 8 bytes como entero sin signo de 64 bits; el Bit es el bit más bajo del último byte');
     } else {
-      row('Number', `to be drawn from round ${fmt(y.beacon.number.committed_drand_round)}`);
+      row('Número', `se sorteará de la ronda ${fmt(y.beacon.number.committed_drand_round)}`);
     }
 
     if (y.tower) {
-      row('Move', el('strong', { class: 'mono' }, y.tower.move), ` (move ${y.tower.number}), decided by ${DECIDED[y.tower.decided_by] ?? y.tower.decided_by}`);
-      row('Tally', el('span', { class: 'mono' }, Object.entries(y.tower.tally).map(([k, v]) => `${k}: ${v}`).join(' · ')));
-      row('Tower', el('span', { class: 'mono' }, `${y.tower.state_before} → ${y.tower.state_after}`), ` · ${fmt(y.tower.optimal_remaining)} optimal moves remaining`);
+      row('Movimiento', el('strong', { class: 'mono' }, y.tower.move), ` (movimiento ${y.tower.number}), decidido por ${DECIDED[y.tower.decided_by] ?? y.tower.decided_by}`);
+      row('Conteo', el('span', { class: 'mono' }, Object.entries(y.tower.tally).map(([k, v]) => `${k}: ${v}`).join(' · ')));
+      row('Torre', el('span', { class: 'mono' }, `${y.tower.state_before} → ${y.tower.state_after}`), ` · ${fmt(y.tower.optimal_remaining)} movimientos óptimos restantes`);
       const tb = y.beacon.tiebreak;
-      row('Tie-break', sourceName(tb.source), ', ', beaconLink(tb), tb.randomness ? el('span', { class: 'hex' }, ` ${tb.randomness}`) : '');
+      row('Desempate', sourceName(tb.source), ', ', beaconLink(tb), tb.randomness ? el('span', { class: 'hex' }, ` ${tb.randomness}`) : '');
       if (tb.derivation) {
-        row('Tie-break derivation', `number mod ${tb.derivation.choices.length} = ${tb.derivation.index} → `, el('span', { class: 'mono' }, tb.derivation.choices.join(', ')), ` → ${tb.derivation.choices[tb.derivation.index]}`);
+        row('Derivación del desempate', `número mod ${tb.derivation.choices.length} = ${tb.derivation.index} → `, el('span', { class: 'mono' }, tb.derivation.choices.join(', ')), ` → ${tb.derivation.choices[tb.derivation.index]}`);
       }
     } else if (!y.closed_at) {
-      row('Move', 'votes are sealed until the close');
+      row('Movimiento', 'los votos están sellados hasta el cierre');
     }
-    row('Seals', el('span', { class: 'mono small' }, Object.entries(y.seals.t).map(([k, v]) => `${k} T=${fmt(v)}`).join(' · ')), ` (${fmt(y.seals.benchmark.squaringsPerSecond)} squarings/s on ${y.seals.benchmark.cpu})`);
-    if (y.closed_at) row('Ledger', el('a', { href: `/api/ledger/${y.year}.json` }, `${y.year}.json`));
+    row('Sellos', el('span', { class: 'mono small' }, Object.entries(y.seals.t).map(([k, v]) => `${SEAL_NAMES[k] ?? k} T=${fmt(v)}`).join(' · ')), ` (${fmt(y.seals.benchmark.squaringsPerSecond)} cuadrados/s en ${y.seals.benchmark.cpu})`);
+    if (y.closed_at) row('Registro', el('a', { href: `/api/ledger/${y.year}.json` }, `${y.year}.json`));
 
     const verifyOut = el('p', { class: 'small dim', 'aria-live': 'polite' });
     const actions: Node[] = [];
     if (y.number && y.beacon.number.source === 'drand' && y.beacon.number.randomness) {
-      const btn = el('button', { type: 'button' }, 'Verify the Number in your browser');
+      const btn = el('button', { type: 'button' }, 'Verificar el Número en tu navegador');
       btn.addEventListener('click', async () => {
         btn.disabled = true;
-        verifyOut.textContent = 'Asking drand directly and checking the signature…';
+        verifyOut.textContent = 'Preguntando directamente a drand y revisando la firma…';
         try {
           verifyOut.textContent = await verifyDrandInBrowser(y.beacon.number.committed_drand_round, y.beacon.number.randomness!);
           verifyOut.className = 'small success';
         } catch (e) {
-          verifyOut.textContent = `Could not verify: ${(e as Error).message}`;
+          verifyOut.textContent = `No se pudo verificar: ${(e as Error).message}`;
           verifyOut.className = 'small error';
           btn.disabled = false;
         }
@@ -221,12 +223,12 @@ import Shrine from '../layouts/Shrine.astro';
       actions.push(el('p', {}, btn), verifyOut);
     }
 
-    const entries = el('details', {}, el('summary', {}, `The sealed guestbook: ${fmt(y.guestbook_count)} ${y.guestbook_count === 1 ? 'entry' : 'entries'}`));
+    const entries = el('details', {}, el('summary', {}, `El libro de visitas sellado: ${fmt(y.guestbook_count)} ${y.guestbook_count === 1 ? 'mensaje' : 'mensajes'}`));
     let loaded = false;
     entries.addEventListener('toggle', async () => {
       if (loaded || !entries.open) return;
       loaded = true;
-      const list = el('div', {}, el('p', { class: 'dim' }, 'Loading…'));
+      const list = el('div', {}, el('p', { class: 'dim' }, 'Cargando…'));
       entries.append(list);
       const { entries: rows } = await getJson<{ entries: Entry[] }>(`/api/guestbook?year=${y.year}`);
       list.replaceChildren(
@@ -235,20 +237,20 @@ import Shrine from '../layouts/Shrine.astro';
               el(
                 'div',
                 { class: 'entry', id: `entry-${e.id}` },
-                el('header', {}, el('strong', {}, `#${e.id}`), el('span', {}, `${e.seal} seal`), el('span', { class: 'mono small dim' }, `T = ${fmt(e.t)}`), el('span', { class: 'small faint' }, utc(e.created_at))),
-                el('p', { class: 'small' }, 'Open it: ', el('code', {}, `rite-solver open ${e.id}`)),
-                el('details', {}, el('summary', { class: 'small' }, 'the puzzle'), el('p', { class: 'hex' }, `N = ${e.n_hex}`), el('p', { class: 'hex' }, `iv = ${e.iv_b64}`), el('p', { class: 'hex' }, `ciphertext = ${e.ciphertext_b64}`)),
+                el('header', {}, el('strong', {}, `#${e.id}`), el('span', {}, `sello ${(SEAL_NAMES[e.seal] ?? e.seal).toLowerCase()}`), el('span', { class: 'mono small dim' }, `T = ${fmt(e.t)}`), el('span', { class: 'small faint' }, utc(e.created_at))),
+                el('p', { class: 'small' }, 'Para abrirlo: ', el('code', {}, `rite-solver open ${e.id}`)),
+                el('details', {}, el('summary', { class: 'small' }, 'el acertijo'), el('p', { class: 'hex' }, `N = ${e.n_hex}`), el('p', { class: 'hex' }, `iv = ${e.iv_b64}`), el('p', { class: 'hex' }, `ciphertext = ${e.ciphertext_b64}`)),
               ),
             )
-          : [el('p', { class: 'dim' }, 'Nobody sealed a message this year.')]),
+          : [el('p', { class: 'dim' }, 'Nadie selló un mensaje este año.')]),
       );
     });
 
     return el(
       'section',
       { class: 'panel year', id: `y${y.year}` },
-      el('h2', {}, `The Day of ${y.year}`, el('small', {}, y.closed_at ? 'closed' : 'open')),
-      y.number ? el('p', { class: 'eyebrow' }, 'The Number') : '',
+      el('h2', {}, `El Día de ${y.year}`, el('small', {}, y.closed_at ? 'cerrado' : 'abierto')),
+      y.number ? el('p', { class: 'eyebrow' }, 'El Número') : '',
       y.number ? el('p', { class: 'big-number' }, fmt(y.number.decimal)) : '',
       y.number ? el('p', { class: 'hex' }, y.number.hex) : '',
       facts,
@@ -261,7 +263,7 @@ import Shrine from '../layouts/Shrine.astro';
   years.replaceChildren(
     ...(data.years.length
       ? data.years.map(yearCard)
-      : [el('p', { class: 'center dim' }, 'Nothing is recorded yet. The first Day opens on 9 October 2026 at 10:00 UTC.')]),
+      : [el('p', { class: 'center dim' }, 'Aún no hay nada registrado. El primer Día abre el 9 de octubre de 2026 a las 10:00 UTC.')]),
   );
   if (location.hash) document.querySelector(location.hash)?.scrollIntoView();
 </script>

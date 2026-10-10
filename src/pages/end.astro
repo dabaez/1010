@@ -5,39 +5,39 @@ import Shrine from '../layouts/Shrine.astro';
 import { LEDGER_REPO_URL } from '../shared/site';
 ---
 
-<Shrine title="Programming is over" description="All twelve rings stand on C. The Annual Rite is complete." bare>
+<Shrine title="La programación ha terminado" description="Los doce anillos están en C. El Rito Anual está completo." bare>
   <section class="end center">
     <p class="eyebrow">1010</p>
     <svg id="tower-svg" class="tower-svg"></svg>
-    <h1>Programming is over.</h1>
-    <p class="lede" id="lede">All twelve rings stand on C.</p>
+    <h1>La programación ha terminado.</h1>
+    <p class="lede" id="lede">Los doce anillos están en C.</p>
 
     <dl class="tally" id="tally" hidden>
-      <div><dt>Days</dt><dd id="days">–</dd></div>
-      <div><dt>Moves</dt><dd id="moves">–</dd></div>
-      <div><dt>Perfect play</dt><dd>4,095</dd></div>
-      <div><dt>Wandering</dt><dd id="extra">–</dd></div>
+      <div><dt>Días</dt><dd id="days">–</dd></div>
+      <div><dt>Movimientos</dt><dd id="moves">–</dd></div>
+      <div><dt>Juego perfecto</dt><dd>4.095</dd></div>
+      <div><dt>Rodeos</dt><dd id="extra">–</dd></div>
     </dl>
 
     <div class="words">
       <p>
-        It began on the ninth of October 2026, with every ring on A and a prophecy that was specific: not B, but C.
-        Once a year, for fifty hours, it was October 10 somewhere on Earth, and whoever came voted, and one ring moved.
+        Empezó el nueve de octubre de 2026, con todos los anillos en A y una profecía precisa: no B, sino C. Una vez al
+        año, durante cincuenta horas, era 10 de octubre en algún lugar de la Tierra; quien llegaba votaba, y un anillo se
+        movía.
       </p>
       <p>
-        The crowd was never told which move was wise. It stumbled, doubled back, and kept coming. This is what it
-        built, one year at a time.
+        A la multitud nunca se le dijo qué movimiento era sabio. Tropezó, retrocedió y siguió viniendo. Esto es lo que
+        construyó, un año a la vez.
       </p>
       <p>
-        The shrine will not open again. Its record remains: every Number and every Bit, every tally, and the sealed
-        guestbook, whose seals keep falling on their own schedule, one squaring after another, long after the last
-        vote.
+        El templo no volverá a abrir. Su registro permanece: cada Número y cada Bit, cada conteo, y el libro de visitas
+        sellado, cuyos sellos siguen cayendo a su propio ritmo, un cuadrado tras otro, mucho después del último voto.
       </p>
     </div>
 
     <p class="links">
-      <a href="/tower/">The whole journey</a> · <a href="/archive/">The archive</a> · <a href="/solver/">Open a seal</a> ·{' '}
-      <a href={LEDGER_REPO_URL}>The ledger</a>
+      <a href="/tower/">Todo el viaje</a> · <a href="/archive/">El archivo</a> · <a href="/solver/">Abrir un sello</a> ·{' '}
+      <a href={LEDGER_REPO_URL}>El registro</a>
     </p>
   </section>
 </Shrine>
@@ -118,13 +118,13 @@ import { LEDGER_REPO_URL } from '../shared/site';
   import { GOAL_STATE, OPTIMAL_TOTAL } from '../shared/tower';
 
   const svg = document.querySelector<SVGSVGElement>('#tower-svg')!;
-  drawTower(svg, GOAL_STATE, { label: 'All twelve rings on peg C' });
+  drawTower(svg, GOAL_STATE, { label: 'Los doce anillos en el poste C' });
 
   try {
     const t = await getJson<{ movesMade: number; history: { year: number }[] }>('/api/tower');
     const last = t.history.at(-1);
     if (last && t.movesMade >= OPTIMAL_TOTAL) {
-      $('#lede').textContent = `On the Day of ${last.year}, after ${fmt(t.movesMade)} moves, the twelfth ring came to rest on C.`;
+      $('#lede').textContent = `El Día de ${last.year}, después de ${fmt(t.movesMade)} movimientos, el duodécimo anillo llegó a descansar en C.`;
       $('#days').textContent = fmt(t.history.length);
       $('#moves').textContent = fmt(t.movesMade);
       $('#extra').textContent = fmt(t.movesMade - OPTIMAL_TOTAL);

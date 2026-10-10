@@ -77,7 +77,7 @@ fn die(msg: impl AsRef<str>) -> ! {
 
 fn usage() -> ! {
     eprintln!(
-        "usage:
+        "uso:
   rite-solver open <entry-id> [--site URL] [--dir DIR] [--yes]
   rite-solver open <entry-id> --ledger ledger/YYYY.json [--dir DIR] [--yes]
   rite-solver open --file entry.json [--dir DIR] [--yes]
@@ -149,21 +149,21 @@ fn load_entry(args: &Args) -> Entry {
         .first()
         .unwrap_or_else(|| usage())
         .parse()
-        .unwrap_or_else(|_| die("the entry id is a number"));
+        .unwrap_or_else(|_| die("el id del mensaje es un número"));
     if let Some(path) = &args.ledger {
         let text = fs::read_to_string(path).unwrap_or_else(|e| die(format!("{}: {e}", path.display())));
         let ledger: Value = serde_json::from_str(&text).unwrap_or_else(|e| die(format!("{}: {e}", path.display())));
         let found = ledger["guestbook"]
             .as_array()
             .and_then(|entries| entries.iter().find(|e| e["id"].as_u64() == Some(id)))
-            .unwrap_or_else(|| die(format!("entry {id} is not in {}", path.display())));
-        return serde_json::from_value(found.clone()).unwrap_or_else(|e| die(format!("entry {id}: {e}")));
+            .unwrap_or_else(|| die(format!("el mensaje {id} no está en {}", path.display())));
+        return serde_json::from_value(found.clone()).unwrap_or_else(|e| die(format!("mensaje {id}: {e}")));
     }
     let url = format!("{}/api/guestbook/{id}", args.site);
     let body = ureq::get(&url)
         .call()
         .and_then(|mut r| r.body_mut().read_to_string())
-        .unwrap_or_else(|e| die(format!("could not fetch {url}: {e}")));
+        .unwrap_or_else(|e| die(format!("no se pudo descargar {url}: {e}")));
     serde_json::from_str(&body).unwrap_or_else(|e| die(format!("{url}: {e}")))
 }
 
@@ -182,14 +182,14 @@ fn save_checkpoint(path: &Path, cp: &Checkpoint) {
     let tmp = path.with_extension("json.tmp");
     let data = serde_json::to_string_pretty(cp).expect("checkpoint serializes");
     if let Err(e) = fs::write(&tmp, data).and_then(|_| fs::rename(&tmp, path)) {
-        eprintln!("\nrite-solver: could not save checkpoint {}: {e}", path.display());
+        eprintln!("\nrite-solver: no se pudo guardar el avance en {}: {e}", path.display());
     }
 }
 
 // ---------------------------------------------------------------- squaring
 
 fn parse_hex(s: &str, what: &str) -> Integer {
-    Integer::from_str_radix(s.trim().trim_start_matches("0x"), 16).unwrap_or_else(|_| die(format!("{what} is not hex")))
+    Integer::from_str_radix(s.trim().trim_start_matches("0x"), 16).unwrap_or_else(|_| die(format!("{what} no es hexadecimal")))
 }
 
 /// SHA-256 of b, big-endian, left-padded to the byte length of N.
@@ -205,21 +205,21 @@ fn decrypt(entry: &Entry, b: &Integer, n: &Integer) -> Result<String, String> {
     let key = key_from_b(b, n);
     let iv = B64.decode(&entry.iv_b64).map_err(|e| format!("iv: {e}"))?;
     if iv.len() != 12 {
-        return Err("the iv is not 12 bytes".into());
+        return Err("el iv no tiene 12 bytes".into());
     }
     let ct = B64.decode(&entry.ciphertext_b64).map_err(|e| format!("ciphertext: {e}"))?;
     let cipher = Aes256Gcm::new_from_slice(&key).map_err(|e| e.to_string())?;
     let plain = cipher
         .decrypt(Nonce::from_slice(&iv), ct.as_ref())
-        .map_err(|_| "decryption failed: wrong T or N, or the entry was tampered with".to_string())?;
-    String::from_utf8(plain).map_err(|_| "the message is not UTF-8".into())
+        .map_err(|_| "falló el descifrado: T o N equivocados, o el mensaje fue alterado".to_string())?;
+    String::from_utf8(plain).map_err(|_| "el mensaje no está en UTF-8".into())
 }
 
 fn fmt_int(s: &str) -> String {
     let mut out = String::new();
     for (i, c) in s.chars().enumerate() {
         if i > 0 && (s.len() - i) % 3 == 0 {
-            out.push(',');
+            out.push('.');
         }
         out.push(c);
     }
@@ -236,11 +236,20 @@ fn fmt_duration(secs: f64) -> String {
     let (h, rest) = (rest / 3_600, rest % 3_600);
     let (m, s) = (rest / 60, rest % 60);
     if y > 0 {
-        format!("{y}y {d}d {h}h")
+        format!("{y}a {d}d {h}h")
     } else if d > 0 {
         format!("{d}d {h}h {m}m")
     } else {
         format!("{h:02}:{m:02}:{s:02}")
+    }
+}
+
+fn seal_name(seal: &str) -> &str {
+    match seal {
+        "short" => "corto",
+        "decade" => "década",
+        "century" => "siglo",
+        other => other,
     }
 }
 
@@ -259,9 +268,9 @@ fn slow_print(text: &str, quiet: bool) {
 fn open(args: Args) {
     let entry = load_entry(&args);
     let n = parse_hex(&entry.n_hex, "N");
-    let t = Integer::from_str_radix(&entry.t, 10).unwrap_or_else(|_| die("T is not a decimal number"));
+    let t = Integer::from_str_radix(&entry.t, 10).unwrap_or_else(|_| die("T no es un número decimal"));
     if t < 1 {
-        die("T must be positive");
+        die("T debe ser positivo");
     }
     fs::create_dir_all(&args.dir).unwrap_or_else(|e| die(format!("{}: {e}", args.dir.display())));
     let cp_path = checkpoint_path(&args.dir, &entry);
@@ -271,10 +280,10 @@ fn open(args: Args) {
             let cp: Checkpoint =
                 serde_json::from_str(&text).unwrap_or_else(|e| die(format!("{}: {e}", cp_path.display())));
             if cp.entry.n_hex != entry.n_hex || cp.entry.t != entry.t {
-                die(format!("{} belongs to a different puzzle", cp_path.display()));
+                die(format!("{} pertenece a otro acertijo", cp_path.display()));
             }
             (
-                Integer::from_str_radix(&cp.done, 10).unwrap_or_else(|_| die("bad checkpoint")),
+                Integer::from_str_radix(&cp.done, 10).unwrap_or_else(|_| die("avance guardado inválido")),
                 parse_hex(&cp.x_hex, "checkpoint x"),
                 cp.seconds_spent,
             )
@@ -283,19 +292,19 @@ fn open(args: Args) {
     };
 
     let label = match (entry.id, entry.year, &entry.seal) {
-        (Some(id), Some(y), Some(s)) => format!("entry {id}, sealed on the Day of {y}, {s} seal"),
-        (Some(id), _, _) => format!("entry {id}"),
-        _ => "an unnumbered entry".into(),
+        (Some(id), Some(y), Some(s)) => format!("el mensaje {id}, sellado el Día de {y}, sello {}", seal_name(s)),
+        (Some(id), _, _) => format!("el mensaje {id}"),
+        _ => "un mensaje sin número".into(),
     };
     slow_print(
         &format!(
             "
-    ◯  THE SEALED GUESTBOOK  ◯
+    ◯  EL LIBRO DE VISITAS SELLADO  ◯
 
-    You have chosen {label}.
-    N has {} bits. T is {} squarings.
-    Each squaring waits for the one before it.
-    No crowd of machines can help you; only patience can.
+    Has elegido {label}.
+    N tiene {} bits. T es {} cuadrados.
+    Cada cuadrado espera al anterior.
+    Ninguna multitud de máquinas puede ayudarte; solo la paciencia.
 ",
             n.significant_bits(),
             fmt_int(&entry.t)
@@ -304,13 +313,13 @@ fn open(args: Args) {
     );
     if done > 0 {
         println!(
-            "    Resuming: {} squarings already done, over {}.\n",
+            "    Retomando: {} cuadrados ya hechos, en {}.\n",
             fmt_int(&done.to_string()),
             fmt_duration(spent)
         );
     }
     if !args.yes && done == 0 {
-        print!("    Press Enter to begin the squaring, or Ctrl-C to walk away. ");
+        print!("    Presiona Enter para empezar, o Ctrl-C para alejarte. ");
         io::stdout().flush().ok();
         let mut line = String::new();
         io::stdin().read_line(&mut line).ok();
@@ -354,7 +363,7 @@ fn open(args: Args) {
             let rate = (done.to_f64() - done_at_start) / elapsed;
             let eta = (t_f - done.to_f64()) / rate;
             print!(
-                "\r    {} / {}  ({:.6}%)  {:.2}M squarings/s  ETA {}   ",
+                "\r    {} / {}  ({:.6}%)  {:.2}M cuadrados/s  faltan {}   ",
                 fmt_int(&done.to_string()),
                 fmt_int(&entry.t),
                 100.0 * done.to_f64() / t_f,
@@ -365,8 +374,8 @@ fn open(args: Args) {
             last_print = now;
         }
         if interrupted && done < t {
-            println!("\n\n    The squaring rests. Progress is kept in {}.", cp_path.display());
-            println!("    Run the same command again to continue.");
+            println!("\n\n    El cálculo descansa. El avance queda guardado en {}.", cp_path.display());
+            println!("    Ejecuta el mismo comando otra vez para continuar.");
             std::process::exit(130);
         }
     }
@@ -374,7 +383,7 @@ fn open(args: Args) {
     println!("\n");
     match decrypt(&entry, &x, &n) {
         Ok(message) => {
-            slow_print("    The seal is broken. The message reads:\n", args.quiet);
+            slow_print("    El sello está roto. El mensaje dice:\n", args.quiet);
             println!("{message}");
         }
         Err(e) => die(e),
@@ -393,7 +402,7 @@ fn bench(seconds: f64) {
     n.set_bit(0, true);
     let mut x = Integer::from(2);
 
-    println!("Squaring 2048-bit numbers modulo N for {seconds} s…");
+    println!("Elevando al cuadrado números de 2048 bits módulo N durante {seconds} s…");
     let started = Instant::now();
     let mut count: u64 = 0;
     while started.elapsed().as_secs_f64() < seconds {
@@ -404,7 +413,7 @@ fn bench(seconds: f64) {
         count += 1 << 14;
     }
     let rate = count as f64 / started.elapsed().as_secs_f64();
-    println!("{:.0} squarings/s ({:.1} ns each)", rate, 1e9 / rate);
+    println!("{:.0} cuadrados/s ({:.1} ns cada uno)", rate, 1e9 / rate);
     println!();
     for (seal, years) in [("short", 1.0), ("decade", 10.0), ("century", 100.0)] {
         let t = (rate * SECONDS_PER_YEAR * years).round();

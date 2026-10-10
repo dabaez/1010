@@ -3,76 +3,76 @@ import Shrine from '../layouts/Shrine.astro';
 import { LEDGER_REPO_URL } from '../shared/site';
 ---
 
-<Shrine title="The Solver" description="How to open a sealed guestbook entry: rite-solver squares a number trillions of times in a row, checkpointing as it goes.">
+<Shrine title="Descifrar" description="Cómo abrir un mensaje sellado del libro de visitas: rite-solver eleva un número al cuadrado billones de veces seguidas, guardando su avance.">
   <section class="center">
-    <p class="eyebrow">Ritual II, the other side</p>
-    <h1>Opening a seal</h1>
+    <p class="eyebrow">Ritual II, el otro lado</p>
+    <h1>Abrir un sello</h1>
     <p class="dim lede">
-      Every entry in the guestbook can be opened by anyone. It costs nothing but time: one squaring after another, each
-      waiting for the last, trillions of times. Starting one is a commitment.
+      Cualquiera puede abrir cualquier mensaje del libro de visitas. No cuesta nada más que tiempo: un cuadrado tras otro,
+      cada uno esperando al anterior, billones de veces. Empezar uno es un compromiso.
     </p>
   </section>
 
   <section class="panel">
-    <h2>The ritual</h2>
+    <h2>El ritual</h2>
     <ol class="ritual">
       <li>
-        <p>Get the solver. It is a small Rust program using GMP, kept in the <a href={LEDGER_REPO_URL}>public ledger</a> next to the rules.</p>
+        <p>Consigue el descifrador. Es un pequeño programa en Rust que usa GMP, guardado en el <a href={LEDGER_REPO_URL}>registro público</a> junto a las reglas.</p>
         <pre><code>git clone {LEDGER_REPO_URL}.git
 cd {LEDGER_REPO_URL.split('/').pop()}/solver
 cargo build --release</code></pre>
       </li>
       <li>
-        <p>Choose an entry from the <a href="/archive/">archive</a> and begin.</p>
+        <p>Elige un mensaje del <a href="/archive/">archivo</a> y comienza.</p>
         <pre><code>./target/release/rite-solver open 12</code></pre>
         <p class="dim">
-          It fetches the entry, tells you what you are about to undertake, and waits for you to press Enter. Then it
-          squares. If this site is gone, read the entry from a ledger file instead:
+          Descarga el mensaje, te dice lo que estás por emprender y espera a que presiones Enter. Entonces empieza a elevar
+          al cuadrado. Si este sitio ya no existe, lee el mensaje desde un archivo del registro:
           <code>rite-solver open 12 --ledger ../ledger/2026.json</code>.
         </p>
       </li>
       <li>
-        <p>Leave it running. Progress is written to <code>rite-checkpoints/</code> every 30 seconds and when you press
-        Ctrl-C. Run the same command again, on the same machine or a faster one years later, and it resumes.</p>
+        <p>Déjalo corriendo. El avance se guarda en <code>rite-checkpoints/</code> cada 30 segundos y cuando presionas
+        Ctrl-C. Ejecuta el mismo comando otra vez, en la misma máquina o en una más rápida años después, y continúa.</p>
       </li>
       <li>
-        <p>When the last squaring is done, the solver hashes the result, decrypts, and prints the message. You will
-        likely be the first person ever to read it, including its author's future self.</p>
+        <p>Cuando termina el último cuadrado, el descifrador calcula el hash del resultado, descifra e imprime el mensaje.
+        Probablemente serás la primera persona en leerlo, incluido el yo futuro de quien lo escribió.</p>
       </li>
     </ol>
   </section>
 
   <section class="panel">
-    <h2>Why it cannot be hurried</h2>
+    <h2>Por qué no se puede apurar</h2>
     <p>
-      An entry is an RSW time-lock puzzle (Rivest, Shamir and Wagner, 1996). Its key is
-      <span class="mono">2<sup>2<sup>T</sup></sup> mod N</span>, and the only known way to compute it without the
-      factors of N is to square 2 modulo N, T times in a row. Each step needs the previous one, so a thousand
-      computers are no faster than one. Only a faster one helps.
+      Cada mensaje es un acertijo de bloqueo temporal RSW (Rivest, Shamir y Wagner, 1996). Su clave es
+      <span class="mono">2<sup>2<sup>T</sup></sup> mod N</span>, y la única forma conocida de calcularla sin los
+      factores de N es elevar 2 al cuadrado módulo N, T veces seguidas. Cada paso necesita el anterior, así que mil
+      computadores no son más rápidos que uno. Solo ayuda uno más rápido.
     </p>
     <p>
-      The writer's browser knew the two primes behind N, and took a shortcut through
-      <span class="mono">φ(N)</span> that turns trillions of squarings into a few thousand. Then it forgot them.
+      El navegador de quien escribió conocía los dos primos detrás de N, y tomó un atajo a través de
+      <span class="mono">φ(N)</span> que convierte billones de cuadrados en unos pocos miles. Luego los olvidó.
     </p>
     <p>
-      T is set each year by measuring how fast a fast desktop CPU squares 2048-bit numbers with GMP:
-      <code>rite-solver bench</code> prints the rate and the T it implies for each seal. Expect seals to fall early.
-      Rivest's LCS35 puzzle of 1999 was meant to take 35 years; it was solved in 2019, once on an ordinary CPU over
-      about three and a half years and once with an FPGA in about two months.
+      T se fija cada año midiendo qué tan rápido un procesador de escritorio veloz eleva al cuadrado números de 2048 bits
+      con GMP: <code>rite-solver bench</code> muestra la velocidad y el T que implica para cada sello. Es de esperar que
+      los sellos caigan antes de tiempo. El acertijo LCS35 de Rivest, de 1999, debía tomar 35 años; se resolvió en 2019,
+      una vez en un procesador común durante unos tres años y medio, y otra con una FPGA en unos dos meses.
     </p>
     <p class="note">
-      None of this is quantum-safe. A large enough quantum computer could factor N with Shor's algorithm and open
-      every seal at once. That, too, is part of the Rite.
+      Nada de esto resiste a la computación cuántica. Un computador cuántico lo bastante grande podría factorizar N con
+      el algoritmo de Shor y abrir todos los sellos de una vez. Eso también es parte del Rito.
     </p>
   </section>
 
   <section class="panel">
-    <h2>Opening by hand</h2>
-    <p>The format is plain, so any language with big integers will do. From the rules:</p>
+    <h2>Abrirlo a mano</h2>
+    <p>El formato es simple, así que sirve cualquier lenguaje con enteros grandes. Según las reglas:</p>
     <pre><code>x = 2
-repeat T times:  x = x² mod N
-K = SHA-256( x as big-endian bytes, left-padded to the byte length of N )
-message = AES-256-GCM-decrypt( key K, iv, ciphertext with its 16-byte tag, no AAD )</code></pre>
+repetir T veces:  x = x² mod N
+K = SHA-256( x en bytes big-endian, rellenado con ceros a la izquierda hasta el largo en bytes de N )
+mensaje = descifrar-AES-256-GCM( clave K, iv, texto cifrado con su tag de 16 bytes, sin AAD )</code></pre>
   </section>
 </Shrine>
 

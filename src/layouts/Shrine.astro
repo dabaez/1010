@@ -15,23 +15,23 @@ interface Props {
 
 const {
   title,
-  description = 'A website that opens for one day a year: a Tower of Hanoi moved one ring per year by vote, a guestbook sealed in time-lock puzzles, and a verifiable random number of the year.',
+  description = 'Un sitio que abre un día al año: una Torre de Hanói que mueve un anillo por año, por votación; un libro de visitas sellado en acertijos de bloqueo temporal; y un número aleatorio verificable del año.',
   wide = false,
   bare = false,
 } = Astro.props;
-const fullTitle = title ? `${title} · The Annual Rite` : 'The Annual Rite';
+const fullTitle = title ? `${title} · El Rito Anual` : 'El Rito Anual';
 const path = Astro.url.pathname;
 const nav = [
-  ['/', 'Shrine'],
-  ['/tower/', 'Tower'],
-  ['/archive/', 'Archive'],
-  ['/solver/', 'Solver'],
-  ['/rules/', 'Rules'],
+  ['/', 'Templo'],
+  ['/tower/', 'Torre'],
+  ['/archive/', 'Archivo'],
+  ['/solver/', 'Descifrar'],
+  ['/rules/', 'Reglas'],
 ];
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -46,11 +46,11 @@ const nav = [
     {
       !bare && (
         <header class="site-header">
-          <a href="/" class="sigil" aria-label="The Annual Rite, home">
+          <a href="/" class="sigil" aria-label="El Rito Anual, inicio">
             <span class="sigil-num">1010</span>
-            <span class="sigil-name">The Annual Rite</span>
+            <span class="sigil-name">El Rito Anual</span>
           </a>
-          <nav aria-label="Main">
+          <nav aria-label="Principal">
             {nav.map(([href, label]) => (
               <a href={href} aria-current={path === href || (href !== '/' && path.startsWith(href!)) ? 'page' : undefined}>
                 {label}
@@ -67,9 +67,9 @@ const nav = [
       !bare && (
         <footer class="site-footer wrap">
           <p>
-            Open one day a year: October 10, for 50 hours, Anywhere on Earth.
+            Abre un día al año: el 10 de octubre, durante 50 horas, en cualquier lugar de la Tierra.
             <br />
-            The server's clock is the only authority.
+            El reloj del servidor es la única autoridad.
           </p>
         </footer>
       )

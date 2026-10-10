@@ -356,18 +356,18 @@ export type WriteResult = { ok: true } | { ok: false; status: 400 | 409 | 423; e
 
 export function castVote(ctx: RiteContext, year: number, voter: string, move: string, now: Date): WriteResult {
   const m = parseMove(move);
-  if (!m) return { ok: false, status: 400, error: 'not a move' };
+  if (!m) return { ok: false, status: 400, error: 'eso no es un movimiento' };
   const name = moveName(m);
   const state = realTowerState(ctx.db);
   if (!legalMoves(state).some((l) => moveName(l) === name)) {
-    return { ok: false, status: 400, error: `${name} is not a legal move` };
+    return { ok: false, status: 400, error: `${name} no es un movimiento legal` };
   }
   const res = ctx.db
     .insert(votes)
     .values({ year, voter_hash: voter, move: name, created_at: now.toISOString() })
     .onConflictDoNothing()
     .run();
-  if (!res.changes) return { ok: false, status: 409, error: 'you have already voted this year' };
+  if (!res.changes) return { ok: false, status: 409, error: 'ya votaste este año' };
   return { ok: true };
 }
 
@@ -399,7 +399,7 @@ export function addEntry(
   return ctx.db.$client
     .transaction(() => {
       const res = ctx.db.insert(voters_guestbook).values({ year, voter_hash: voter }).onConflictDoNothing().run();
-      if (!res.changes) return { ok: false as const, status: 409 as const, error: 'you have already signed this year' };
+      if (!res.changes) return { ok: false as const, status: 409 as const, error: 'ya firmaste este año' };
       const row = ctx.db
         .insert(guestbook)
         .values({ year, ...entry, created_at: now.toISOString() })

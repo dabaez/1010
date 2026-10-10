@@ -1,157 +1,164 @@
-# The Rules of the Annual Rite
+# Las reglas del Rito Anual
 
-These are the rules in plain words. They are the source of truth. The website
-at <https://1010.b4ez.com> carries them out, and the ledger records what it
-did each year, so that anyone can check its work or carry on without it.
+Estas son las reglas en palabras simples. Son la fuente de verdad. El sitio
+<https://1010.b4ez.com> las lleva a cabo, y el registro anota lo que hizo cada
+año, para que cualquiera pueda revisar su trabajo o continuar sin él.
 
-## The Day
+## El Día
 
-The Rite is held once a year, on **October 10** (10/10, which reads as 1010).
-It is held for 50 hours, so that it is October 10 somewhere on Earth the whole
-time:
+El Rito se celebra una vez al año, el **10 de octubre** (10/10, que se lee
+1010). Dura 50 horas, para que durante todo ese tiempo sea 10 de octubre en
+algún lugar de la Tierra:
 
-- It **opens** at **10:00:00 UTC on October 9**, when October 10 begins in UTC+14.
-- It **closes** at **12:00:00 UTC on October 11**, when October 10 ends in UTC−12.
+- **Abre** a las **10:00:00 UTC del 9 de octubre**, cuando empieza el 10 de octubre en UTC+14.
+- **Cierra** a las **12:00:00 UTC del 11 de octubre**, cuando termina el 10 de octubre en UTC−12.
 
-The opening instant belongs to the Day; the closing instant does not. The dates
-are the same every year. There is no leap-year rule. The first Day was in 2026.
+El instante de apertura pertenece al Día; el de cierre no. Las fechas son las
+mismas todos los años. No hay regla para años bisiestos. El primer Día fue en
+2026.
 
-The rest of the year nothing can be written: no votes, no entries.
+El resto del año no se puede escribir nada: ni votos, ni mensajes.
 
-## I. The Tower
+## I. La Torre
 
-There are 12 rings, numbered 1 (smallest) to 12 (largest), and three pegs: A,
-B and C. On the first Day every ring was on A.
+Hay 12 anillos, numerados del 1 (el más pequeño) al 12 (el más grande), y tres
+postes: A, B y C. El primer Día todos los anillos estaban en A.
 
-**The state** of the tower is written as 12 letters, one per ring from the
-smallest to the largest, each giving the peg the ring sits on. The start is
-`AAAAAAAAAAAA`. The order of rings on a peg follows from the rule below, so the
-12 letters say everything.
+**El estado** de la torre se escribe con 12 letras, una por anillo del más
+pequeño al más grande, cada una indicando el poste en que está ese anillo. El
+comienzo es `AAAAAAAAAAAA`. El orden de los anillos en un poste se deduce de la
+regla de abajo, así que las 12 letras lo dicen todo.
 
-**A move** takes the top (smallest) ring from one peg and puts it on another
-peg, which must be empty or have a larger top ring. A move is named
-`from→to`, for example `A→C`. Each position has exactly 3 legal moves, or 2
-when all rings are on one peg.
+**Un movimiento** toma el anillo de arriba (el más pequeño) de un poste y lo
+pone en otro poste, que debe estar vacío o tener arriba un anillo más grande. Un
+movimiento se nombra `desde→hasta`, por ejemplo `A→C`. Cada posición tiene
+exactamente 3 movimientos legales, o 2 cuando todos los anillos están en un
+mismo poste.
 
-**Each Day exactly one move is made.** Anyone may vote once for one of the
-legal moves. Votes are kept hidden until the close. At the close:
+**Cada Día se hace exactamente un movimiento.** Cualquiera puede votar una vez
+por uno de los movimientos legales. Los votos se mantienen ocultos hasta el
+cierre. Al cierre:
 
-1. The move with the most votes is made.
-2. **A tie** between moves with the most votes is broken by the tie-break
-   number (see III): list the tied moves in alphabetical order of their names
-   (`A→B`, `A→C`, `B→A`, `B→C`, `C→A`, `C→B`), and take the one at position
-   *number mod (how many are tied)*, counting from 0.
-3. **No votes at all:** the same rule picks among *all* the legal moves.
+1. Se hace el movimiento con más votos.
+2. **Un empate** entre los movimientos con más votos lo rompe el número de
+   desempate (ver III): se ordenan los movimientos empatados alfabéticamente por
+   su nombre (`A→B`, `A→C`, `B→A`, `B→C`, `C→A`, `C→B`) y se toma el que está en
+   la posición *número mod (cuántos empataron)*, contando desde 0.
+3. **Sin ningún voto:** la misma regla elige entre *todos* los movimientos
+   legales.
 
-The Rite never skips a year. If nobody could vote that year, rule 3 applies.
+El Rito nunca se salta un año. Si nadie pudo votar ese año, se aplica la regla 3.
 
-**The end of programming.** When all 12 rings are on **C**, the tower is
-complete and programming is over. No more Days are held. All rings on B does
-not count; the prophecy is specific. Played perfectly the tower takes
-2^12 − 1 = 4,095 moves, one per year, so the earliest possible end is the
-Day of 6121. The crowd will not play perfectly.
+**El fin de la programación.** Cuando los 12 anillos están en **C**, la torre
+está completa y la programación ha terminado. No se celebran más Días. Todos
+los anillos en B no cuenta; la profecía es precisa. Jugando a la perfección la
+torre toma 2^12 − 1 = 4.095 movimientos, uno por año, así que el fin más
+temprano posible es el Día de 6121. La multitud no jugará a la perfección.
 
-## II. The Sealed Guestbook
+## II. El Libro de Visitas Sellado
 
-On the Day, each person may leave one message of up to 1,000 characters
-(Unicode code points), sealed in an RSW time-lock puzzle (Rivest, Shamir,
-Wagner, 1996). The message is sealed in the writer's browser; only the sealed
-form ever leaves it. Nobody, including the keepers of the site, can read an
-entry without opening its seal, so entries cannot be moderated.
+El Día, cada persona puede dejar un mensaje de hasta 1.000 caracteres (puntos de
+código Unicode), sellado en un acertijo de bloqueo temporal RSW (Rivest,
+Shamir, Wagner, 1996). El mensaje se sella en el navegador de quien lo escribe;
+solo la forma sellada sale de él. Nadie, ni siquiera quienes cuidan el sitio,
+puede leer un mensaje sin abrir su sello, así que los mensajes no se pueden
+moderar.
 
-An entry is `N`, `T`, `iv` and `ciphertext`:
+Un mensaje es `N`, `T`, `iv` y `ciphertext`:
 
-- `N` is a 2048-bit RSA modulus, the product of two primes that only the
-  writer's browser ever knew. Written in lowercase hexadecimal.
-- `T` is a number of squarings, written in decimal.
-- To open: start with x = 2 and replace x by x² mod N, T times in a row. Call
-  the result b. (b = 2^(2^T) mod N.)
-- The key K is the SHA-256 hash of b written as big-endian bytes, left-padded
-  with zero bytes to the byte length of N (256 bytes for a 2048-bit N).
-- The message is the AES-256-GCM decryption of `ciphertext` (base64, with the
-  16-byte tag at the end) under K with the 12-byte `iv` (base64) and no
-  additional data. It is UTF-8.
+- `N` es un módulo RSA de 2048 bits, el producto de dos primos que solo conoció
+  el navegador de quien escribió. Se escribe en hexadecimal en minúsculas.
+- `T` es una cantidad de cuadrados, escrita en decimal.
+- Para abrirlo: se empieza con x = 2 y se reemplaza x por x² mod N, T veces
+  seguidas. El resultado es b. (b = 2^(2^T) mod N.)
+- La clave K es el hash SHA-256 de b escrito como bytes big-endian, rellenado
+  con bytes cero a la izquierda hasta el largo en bytes de N (256 bytes para un
+  N de 2048 bits).
+- El mensaje es el descifrado AES-256-GCM de `ciphertext` (base64, con el tag de
+  16 bytes al final) bajo K con el `iv` de 12 bytes (base64) y sin datos
+  adicionales. Está en UTF-8.
 
-The writer chooses a seal, and the seal sets T:
+Quien escribe elige un sello, y el sello fija T:
 
-| Seal    | Target: time to open on a fast desktop CPU that year |
-| ------- | ---------------------------------------------------- |
-| Short   | 1 year                                               |
-| Decade  | 10 years                                             |
-| Century | 100 years                                            |
+| Sello  | Objetivo: tiempo para abrirlo en un procesador de escritorio veloz de ese año |
+| ------ | ----------------------------------------------------------------------------- |
+| Corto  | 1 año                                                                         |
+| Década | 10 años                                                                       |
+| Siglo  | 100 años                                                                      |
 
-T is the number of 2048-bit modular squarings per second that a fast desktop
-CPU does with GMP, measured before each Day, times the target time. Each
-year's ledger records the measurement and the T values used. Seals fall early
-as computers get faster, and a large enough quantum computer would open all of
-them at once by factoring N. That is part of the charm.
+T es la cantidad de cuadrados modulares de 2048 bits por segundo que hace un
+procesador de escritorio veloz con GMP, medida antes de cada Día, multiplicada
+por el tiempo objetivo. El registro de cada año anota la medición y los valores
+de T usados. Los sellos caen antes de tiempo a medida que los computadores se
+vuelven más rápidos, y un computador cuántico lo bastante grande los abriría
+todos de una vez factorizando N. Eso es parte del encanto.
 
-`rite-solver`, in `solver/`, opens entries. It checkpoints its progress to
-disk, so the squaring can be paused and resumed for years.
+`rite-solver`, en `solver/`, abre los mensajes. Guarda su avance en disco, así
+que la tarea de elevar al cuadrado se puede pausar y retomar durante años.
 
-## III. The Number and the Bit
+## III. El Número y el Bit
 
-Each Day has a **Number of the year** and a **Bit of the year**, taken from the
-public randomness beacon **drand** (the League of Entropy's *quicknet* chain,
-hash `52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971`,
-genesis 1692803367, period 3 seconds). Its rounds are threshold-signed and
-anyone can verify them.
+Cada Día tiene un **Número del año** y un **Bit del año**, tomados de la baliza
+pública de aleatoriedad **drand** (la cadena *quicknet* de la League of
+Entropy, hash `52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971`,
+génesis 1692803367, período 3 segundos). Sus rondas tienen firma de umbral y
+cualquiera puede verificarlas.
 
-The round that decides each value is fixed in advance: it is the first round
-at or after a moment, round = floor((t − genesis) / period) + 1, where t is
-the moment in seconds since 1970. The Day's boundaries fall exactly on rounds.
+La ronda que decide cada valor se fija de antemano: es la primera ronda en o
+después de un momento, ronda = floor((t − génesis) / período) + 1, donde t es el
+momento en segundos desde 1970. Los bordes del Día caen exactamente en rondas.
 
-| Value              | Round                                | Derived as                                                        |
-| ------------------ | ------------------------------------ | ----------------------------------------------------------------- |
-| Number of the year | the round at the opening of the Day  | the first 8 bytes of the round's randomness, as an unsigned 64-bit big-endian integer |
-| Bit of the year    | the same round                       | the lowest bit of the last byte of the randomness                 |
-| Tie-break number   | the round at the close of the Day    | the same derivation as the Number                                 |
+| Valor              | Ronda                            | Se obtiene como                                                              |
+| ------------------ | -------------------------------- | ---------------------------------------------------------------------------- |
+| Número del año     | la ronda de la apertura del Día  | los primeros 8 bytes de la aleatoriedad de la ronda, como entero big-endian sin signo de 64 bits |
+| Bit del año        | la misma ronda                   | el bit más bajo del último byte de la aleatoriedad                           |
+| Número de desempate | la ronda del cierre del Día     | igual que el Número                                                          |
 
-The tie-break uses the later round on purpose, so that nobody can know it while
-voting is open.
+El desempate usa a propósito la ronda posterior, para que nadie pueda conocerla
+mientras la votación está abierta.
 
-**Fallback.** If drand cannot be reached, it is retried for one hour. After
-that the NIST Randomness Beacon (version 2.0) pulse at the same moment is used
-instead (the first pulse at or after it), with its `outputValue` in place of
-drand's randomness, and the ledger records which source was used.
+**Respaldo.** Si no se puede contactar a drand, se reintenta durante una hora.
+Después se usa en su lugar el pulso de la Baliza de Aleatoriedad del NIST
+(versión 2.0) en el mismo momento (el primer pulso en o después de él), con su
+`outputValue` en lugar de la aleatoriedad de drand, y el registro anota qué
+fuente se usó.
 
-## Privacy and fairness
+## Privacidad y equidad
 
-There are no accounts. Each vote and each entry passes a CAPTCHA. "One per
-person" is enforced with a hash: HMAC-SHA256 of the visitor's network prefix
-(the /24 of an IPv4 address, the /64 of an IPv6 address) and browser user
-agent, under a secret made when the Day opens and destroyed when it closes.
-At the close the hashes are deleted as well; only the tally is kept. People
-sharing a network and a browser count as one person. It is a ritual, not an
-election.
+No hay cuentas. Cada voto y cada mensaje pasa por un CAPTCHA. "Uno por persona"
+se hace cumplir con un hash: HMAC-SHA256 del prefijo de red de quien visita (el
+/24 de una dirección IPv4, el /64 de una IPv6) y el agente de usuario de su
+navegador, bajo un secreto creado cuando abre el Día y destruido cuando cierra.
+Al cierre también se borran los hashes; solo se guarda el conteo. Las personas
+que comparten red y navegador cuentan como una. Es un ritual, no una elección.
 
-## The ledger
+## El registro
 
-After each close, the whole year is written to `ledger/YYYY.json` in a public
-Git repository, together with these rules and the solver. It holds the
-window, the beacon rounds with their randomness and signatures, the Number and
-the Bit, the tower move with its tally and how it was decided, the T values
-with their benchmark, and every sealed entry. Only plain formats are used:
-JSON, UTF-8, hexadecimal, base64.
+Después de cada cierre, el año completo se escribe en `ledger/AAAA.json` en un
+repositorio Git público, junto con estas reglas y el descifrador. Contiene la
+ventana, las rondas de la baliza con su aleatoriedad y firmas, el Número y el
+Bit, el movimiento de la torre con su conteo y cómo se decidió, los valores de T
+con su medición, y cada mensaje sellado. Solo se usan formatos simples: JSON,
+UTF-8, hexadecimal, base64.
 
-The tower can be rebuilt from the ledger alone: start from `AAAAAAAAAAAA` and
-apply each year's `move`. Each year's `state_before` must equal the previous
-year's `state_after`.
+La torre se puede reconstruir solo con el registro: se parte de
+`AAAAAAAAAAAA` y se aplica el `move` de cada año. El `state_before` de cada año
+debe ser igual al `state_after` del año anterior.
 
-## Succession
+## Sucesión
 
-The website will not last 4,095 years; the Rite can.
+El sitio no durará 4.095 años; el Rito sí puede.
 
-**If the site is dark on the Day, whoever holds the newest ledger may perform
-the Rite by these same rules and publish the result.** That means: take the
-state after the newest move, open voting for the 50-hour window (or, if no
-voting was possible, use the no-votes rule), draw the Number, the Bit and the
-tie-break from the rounds these rules name, make exactly one move, and publish
-a ledger entry for the year in the same format. When several successors
-publish different results for the same year, the one whose result follows
-these rules from the previous ledger stands; if more than one does, the
-earliest published stands.
+**Si el sitio está apagado el Día, quien tenga el registro más reciente puede
+celebrar el Rito con estas mismas reglas y publicar el resultado.** Es decir:
+tomar el estado después del movimiento más reciente, abrir la votación durante
+la ventana de 50 horas (o, si no fue posible votar, usar la regla sin votos),
+sacar el Número, el Bit y el desempate de las rondas que estas reglas indican,
+hacer exactamente un movimiento, y publicar una entrada del registro para ese
+año en el mismo formato. Si varios sucesores publican resultados distintos para
+el mismo año, vale el que siga estas reglas a partir del registro anterior; si
+lo hace más de uno, vale el primero en publicarse.
 
-If drand itself is gone, successors should choose a public, verifiable
-randomness beacon, announce the choice a full year before it is used, and
-record it in the ledger.
+Si drand mismo desaparece, los sucesores deberían elegir una baliza de
+aleatoriedad pública y verificable, anunciar la elección un año completo antes
+de usarla, y anotarla en el registro.

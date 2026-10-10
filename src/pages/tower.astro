@@ -2,52 +2,52 @@
 import Shrine from '../layouts/Shrine.astro';
 ---
 
-<Shrine title="The Tower" description="The Tower of Hanoi of the Annual Rite: its current state and every move ever made, one per year." wide>
+<Shrine title="La Torre" description="La Torre de Hanói del Rito Anual: su estado actual y cada movimiento hecho, uno por año." wide>
   <section class="center">
     <p class="eyebrow">Ritual I</p>
-    <h1>The Tower</h1>
+    <h1>La Torre</h1>
     <p class="dim lede">
-      Twelve rings must travel from A to C, one move per year, chosen by vote. A perfect crowd would need 4,095 years.
-      This one can undo its own work.
+      Doce anillos deben viajar de A a C, un movimiento por año, elegido por votación. Una multitud perfecta necesitaría
+      4.095 años. Esta puede deshacer su propio trabajo.
     </p>
   </section>
 
   <section class="panel">
     <svg id="tower-svg" class="tower-svg"></svg>
     <p class="stat-row center-row">
-      <span>State: <strong id="state" class="mono">–</strong></span>
-      <span>Moves made: <strong id="moves-made">–</strong>.</span>
-      <span>Optimal moves remaining: <strong id="optimal-remaining">–</strong>.</span>
+      <span>Estado: <strong id="state" class="mono">–</strong></span>
+      <span>Movimientos hechos: <strong id="moves-made">–</strong>.</span>
+      <span>Movimientos óptimos restantes: <strong id="optimal-remaining">–</strong>.</span>
     </p>
     <div class="replay" id="replay" hidden>
-      <label for="replay-range" class="eyebrow">Replay: after <span id="replay-label">–</span></label>
+      <label for="replay-range" class="eyebrow">Repetición: después de <span id="replay-label">–</span></label>
       <input type="range" id="replay-range" min="0" max="0" value="0" step="1" />
     </div>
   </section>
 
   <section>
-    <h2>Every move</h2>
+    <h2>Todos los movimientos</h2>
     <div class="table-scroll">
       <table>
         <thead>
           <tr>
             <th>#</th>
-            <th>Day</th>
-            <th>Move</th>
-            <th>Votes</th>
-            <th>Decided by</th>
-            <th>State after</th>
-            <th>Optimal remaining</th>
+            <th>Día</th>
+            <th>Movimiento</th>
+            <th>Votos</th>
+            <th>Decidido por</th>
+            <th>Estado después</th>
+            <th>Óptimos restantes</th>
           </tr>
         </thead>
         <tbody id="history">
-          <tr><td colspan="7" class="dim">Loading…</td></tr>
+          <tr><td colspan="7" class="dim">Cargando…</td></tr>
         </tbody>
       </table>
     </div>
     <p class="dim small">
-      The state lists, for each ring from smallest to largest, the peg it sits on. "Optimal remaining" is the fewest
-      moves from there to all twelve rings on C.
+      El estado indica, para cada anillo del más pequeño al más grande, el poste en que está. "Óptimos restantes" es la
+      menor cantidad de movimientos desde ahí hasta tener los doce anillos en C.
     </p>
   </section>
 </Shrine>
@@ -101,7 +101,7 @@ import Shrine from '../layouts/Shrine.astro';
     history: MoveView[];
   }
 
-  const DECIDED = { votes: 'votes', tiebreak: 'tie, broken by the beacon', no_votes: 'no votes; the beacon chose' };
+  const DECIDED = { votes: 'votos', tiebreak: 'empate, roto por la baliza', no_votes: 'sin votos; eligió la baliza' };
 
   const t = await getJson<TowerResponse>('/api/tower');
   const svg = document.querySelector<SVGSVGElement>('#tower-svg')!;
@@ -112,7 +112,7 @@ import Shrine from '../layouts/Shrine.astro';
 
   const body = $('#history');
   if (!t.history.length) {
-    body.replaceChildren(el('tr', {}, el('td', { colspan: '7', class: 'dim' }, 'No move has been made yet. The first is made at the close of the first Day.')));
+    body.replaceChildren(el('tr', {}, el('td', { colspan: '7', class: 'dim' }, 'Aún no se ha hecho ningún movimiento. El primero se hace al cierre del primer Día.')));
   } else {
     body.replaceChildren(
       ...[...t.history].reverse().map((m) =>
@@ -139,7 +139,7 @@ import Shrine from '../layouts/Shrine.astro';
     const show = () => {
       const i = Number(range.value);
       const state = i === 0 ? START_STATE : t.history[i - 1]!.state_after;
-      label.textContent = i === 0 ? 'the beginning' : `the Day of ${t.history[i - 1]!.year} (move ${i})`;
+      label.textContent = i === 0 ? 'el comienzo' : `el Día de ${t.history[i - 1]!.year} (movimiento ${i})`;
       drawTower(svg, state);
     };
     range.addEventListener('input', show);

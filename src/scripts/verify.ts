@@ -3,6 +3,7 @@
 // Entropy's public key, and compares the randomness with what we published.
 
 import { DRAND_CHAIN, DRAND_RELAYS } from '../shared/beacon';
+import { fmt } from './api';
 
 export async function verifyDrandInBrowser(round: number, expectedRandomness: string): Promise<string> {
   const { fetchBeacon, HttpCachingChain, HttpChainClient } = await import('drand-client');
@@ -17,13 +18,13 @@ export async function verifyDrandInBrowser(round: number, expectedRandomness: st
       const client = new HttpChainClient(new HttpCachingChain(`${relay}/${DRAND_CHAIN.hash}`, opts), opts);
       const beacon = await fetchBeacon(client, round);
       if (beacon.randomness.toLowerCase() !== expectedRandomness.toLowerCase()) {
-        throw new Error(`MISMATCH: drand says ${beacon.randomness} for round ${round}`);
+        throw new Error(`MISMATCH: drand dice ${beacon.randomness} para la ronda ${round}`);
       }
-      return `Verified in your browser via ${new URL(relay).host}: the BLS signature on round ${round.toLocaleString('en-US')} is valid, and its randomness matches.`;
+      return `Verificado en tu navegador vía ${new URL(relay).host}: la firma BLS de la ronda ${fmt(round)} es válida y su aleatoriedad coincide.`;
     } catch (e) {
       if (String((e as Error).message).startsWith('MISMATCH')) throw e;
       lastError = e;
     }
   }
-  throw lastError ?? new Error('no drand relay answered');
+  throw lastError ?? new Error('ningún relay de drand respondió');
 }

@@ -62,9 +62,9 @@ export function createApp(deps: AppDeps) {
   // opens or closes the Rite.
   app.use('*', async (c, next) => {
     const ip = clientIp(c, deps.trustProxy);
-    if (!limiter.allow('read', ip, LIMITS.read)) return c.json({ error: 'too many requests' }, 429);
+    if (!limiter.allow('read', ip, LIMITS.read)) return c.json({ error: 'demasiadas solicitudes; espera un momento' }, 429);
     if (c.req.method === 'POST' && !limiter.allow('write', ip, LIMITS.write)) {
-      return c.json({ error: 'too many requests' }, 429);
+      return c.json({ error: 'demasiadas solicitudes; espera un momento' }, 429);
     }
     ensureOpened(rite);
     void tick(rite);
@@ -164,13 +164,13 @@ export function createApp(deps: AppDeps) {
 
   app.get('/api/guestbook/:id{[0-9]+}', (c) => {
     const e = entryById(rite.db, Number(c.req.param('id')));
-    return e ? c.json(e) : c.json({ error: 'no such entry' }, 404);
+    return e ? c.json(e) : c.json({ error: 'no existe ese mensaje' }, 404);
   });
 
   app.get('/api/ledger/:file{[0-9]+\\.json}', (c) => {
     const year = Number(c.req.param('file').replace('.json', ''));
     const row = getYear(rite.db, year);
-    if (!row?.closed_at) return c.json({ error: 'that year is not closed' }, 404);
+    if (!row?.closed_at) return c.json({ error: 'ese año no está cerrado' }, 404);
     return c.body(ledgerJson(ledgerFor(rite.db, year, deps.siteUrl)), 200, {
       'content-type': 'application/json; charset=utf-8',
     });
@@ -185,18 +185,18 @@ export function createApp(deps: AppDeps) {
     if (!isRitualOpen(now) || isProgrammingOver(rite)) {
       return {
         ok: false,
-        res: c.json({ error: 'The shrine is sealed. Come back on the Day.', opensAt: new Date(currentOrNextWindow(now).opensAt).toISOString() }, 423),
+        res: c.json({ error: 'El templo está sellado. Vuelve el Día.', opensAt: new Date(currentOrNextWindow(now).opensAt).toISOString() }, 423),
       };
     }
     const year = windowFor(now.getUTCFullYear()).year;
     const body = (await c.req.json().catch(() => null)) as Record<string, unknown> | null;
-    if (!body || typeof body !== 'object') return { ok: false, res: c.json({ error: 'expected a JSON body' }, 400) };
+    if (!body || typeof body !== 'object') return { ok: false, res: c.json({ error: 'se esperaba un cuerpo JSON' }, 400) };
     const ip = clientIp(c, deps.trustProxy);
     if (!(await deps.captcha.verify(body.captcha, ip))) {
-      return { ok: false, res: c.json({ error: 'the captcha did not pass; try again' }, 403) };
+      return { ok: false, res: c.json({ error: 'el captcha no pasó; inténtalo de nuevo' }, 403) };
     }
     const voter = identity(c, year);
-    if (!voter) return { ok: false, res: c.json({ error: 'the Rite is still opening; try again in a moment' }, 503) };
+    if (!voter) return { ok: false, res: c.json({ error: 'el Rito aún se está abriendo; inténtalo en un momento' }, 503) };
     return { ok: true, year, voter, body };
   }
 
@@ -205,30 +205,30 @@ export function createApp(deps: AppDeps) {
     if (!g.ok) return g.res;
     const r = castVote(rite, g.year, g.voter, String(g.body.move ?? ''), rite.now());
     if (!r.ok) return c.json({ error: r.error }, r.status);
-    return c.json({ ok: true, message: 'Your vote is sealed until the close.' });
+    return c.json({ ok: true, message: 'Tu voto queda sellado hasta el cierre.' });
   });
 
   app.post('/api/guestbook', async (c) => {
     const g = await guardWrite(c);
     if (!g.ok) return g.res;
     const { seal, n_hex, t, iv_b64, ciphertext_b64 } = g.body;
-    if (!isSeal(seal)) return c.json({ error: 'choose a seal: short, decade or century' }, 400);
-    if (String(t) !== sealTableFor(g.year).t[seal]) return c.json({ error: `T does not match the ${seal} seal of ${g.year}` }, 400);
+    if (!isSeal(seal)) return c.json({ error: 'elige un sello: corto, década o siglo' }, 400);
+    if (String(t) !== sealTableFor(g.year).t[seal]) return c.json({ error: `T no coincide con el sello ${seal} de ${g.year}` }, 400);
     if (typeof n_hex !== 'string' || !/^[0-9a-f]+$/.test(n_hex) || BigInt('0x' + n_hex).toString(2).length !== MODULUS_BITS) {
-      return c.json({ error: `N must be a ${MODULUS_BITS}-bit number in lowercase hex` }, 400);
+      return c.json({ error: `N debe ser un número de ${MODULUS_BITS} bits en hexadecimal en minúsculas` }, 400);
     }
     const iv = typeof iv_b64 === 'string' ? Buffer.from(iv_b64, 'base64') : null;
-    if (!iv || iv.length !== 12 || iv.toString('base64') !== iv_b64) return c.json({ error: 'the iv must be 12 bytes of base64' }, 400);
+    if (!iv || iv.length !== 12 || iv.toString('base64') !== iv_b64) return c.json({ error: 'el iv debe ser de 12 bytes en base64' }, 400);
     const ct = typeof ciphertext_b64 === 'string' ? Buffer.from(ciphertext_b64, 'base64') : null;
     if (!ct || ct.toString('base64') !== ciphertext_b64 || ct.length < 17 || ct.length > MAX_CIPHERTEXT_BYTES) {
-      return c.json({ error: 'the ciphertext is not valid base64 of a sealed message of up to 1,000 characters' }, 400);
+      return c.json({ error: 'el texto cifrado no es base64 válido de un mensaje sellado de hasta 1.000 caracteres' }, 400);
     }
     const r = addEntry(rite, g.year, g.voter, { seal, n_hex, t: String(t), iv_b64, ciphertext_b64 }, rite.now());
     if (!r.ok) return c.json({ error: r.error }, r.status);
     return c.json({ ok: true, id: r.id });
   });
 
-  app.all('/api/*', (c) => c.json({ error: 'not found' }, 404));
+  app.all('/api/*', (c) => c.json({ error: 'no encontrado' }, 404));
 
   // ---------------------------------------------------------------- pages
 
