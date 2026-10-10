@@ -68,6 +68,13 @@ function sealName(seal: string): string {
 const date = (iso: string) =>
   new Date(iso).toLocaleDateString('es', { timeZone: 'UTC', day: 'numeric', month: 'long', year: 'numeric' });
 
+/** The sealed message itself: unreadable, shown as it is. Click to see all of it. */
+function cipherText(b64: string): HTMLElement {
+  const p = el('p', { class: 'entry-cipher', title: 'Texto cifrado (clic para verlo entero)' }, b64);
+  p.addEventListener('click', () => p.classList.toggle('expanded'));
+  return p;
+}
+
 /** The sealed entries of a year, newest last. */
 export function renderEntries(entries: Entry[]): HTMLElement {
   if (!entries.length) return el('p', { class: 'dim' }, 'Nadie selló un mensaje este año.');
@@ -87,14 +94,14 @@ export function renderEntries(entries: Entry[]): HTMLElement {
           `Sello ${sealName(e.seal).toLowerCase()}`,
           opensAround ? ` · se abre hacia ${opensAround}` : '',
         ),
+        cipherText(e.ciphertext_b64),
         el(
           'details',
           { class: 'entry-puzzle' },
-          el('summary', {}, 'acertijo'),
+          el('summary', {}, 'el resto del acertijo'),
           el('p', { class: 'hex' }, `N = ${e.n_hex}`),
           el('p', { class: 'hex' }, `T = ${e.t}`),
           el('p', { class: 'hex' }, `iv = ${e.iv_b64}`),
-          el('p', { class: 'hex' }, `texto cifrado = ${e.ciphertext_b64}`),
         ),
       );
     }),
