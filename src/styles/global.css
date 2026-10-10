@@ -475,8 +475,8 @@ details > summary {
   font-style: italic;
 }
 .entry-meta {
-  font-size: 0.92rem;
-  color: var(--dim);
+  font-size: 0.8rem;
+  color: var(--faint);
 }
 .entry-cipher {
   font-family: var(--mono);

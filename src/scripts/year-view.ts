@@ -2,7 +2,7 @@
 // the archive, each year's page, and the guestbook page.
 
 import { drandRoundUrl } from '../shared/beacon';
-import { SEAL_LABELS, SEAL_YEARS, isSeal } from '../shared/seals';
+import { SEAL_LABELS, isSeal } from '../shared/seals';
 import { el, fmt, utc } from './api';
 import { verifyDrandInBrowser } from './verify';
 
@@ -82,18 +82,12 @@ export function renderEntries(entries: Entry[]): HTMLElement {
     'ol',
     { class: 'entries' },
     ...entries.map((e) => {
-      const opensAround = isSeal(e.seal) ? e.year + SEAL_YEARS[e.seal] : null;
       return el(
         'li',
         { class: 'entry', id: `mensaje-${e.id}` },
         el('span', { class: 'entry-num mono' }, `#${e.id}`),
         el('span', { class: e.name ? 'entry-name' : 'entry-name anon' }, e.name ?? 'Anónimo'),
-        el(
-          'span',
-          { class: 'entry-meta' },
-          `Sello ${sealName(e.seal).toLowerCase()}`,
-          opensAround ? ` · se abre hacia ${opensAround}` : '',
-        ),
+        el('span', { class: 'entry-meta' }, `sello ${sealName(e.seal).toLowerCase()}`),
         cipherText(e.ciphertext_b64),
         el(
           'details',
