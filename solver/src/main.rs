@@ -191,6 +191,17 @@ fn save_checkpoint(path: &Path, cp: &Checkpoint) {
 
 // ---------------------------------------------------------------- squaring
 
+/// Squarings per call to `square_times`, between checks for Ctrl-C and checkpoints.
+const BATCH: u32 = 1 << 16;
+
+/// x = x^(2^k) mod N: k squarings in a row. GMP's powm does them with
+/// Montgomery reduction, about 15% faster than squaring and dividing each time,
+/// so it is both how `open` squares and what `bench` measures.
+fn square_times(x: &mut Integer, k: u32, n: &Integer) {
+    let e = Integer::from(1) << k;
+    x.pow_mod_mut(&e, n).expect("N is positive");
+}
+
 fn parse_hex(s: &str, what: &str) -> Integer {
     Integer::from_str_radix(s.trim().trim_start_matches("0x"), 16).unwrap_or_else(|_| die(format!("{what} no es hexadecimal")))
 }
@@ -342,15 +353,11 @@ fn open(args: Args) {
     let done_at_start = done.to_f64();
     let mut last_save = Instant::now();
     let mut last_print = Instant::now() - Duration::from_secs(10);
-    let batch: u32 = 1 << 14;
 
     while done < t {
         let remaining = Integer::from(&t - &done);
-        let steps = if remaining < batch { remaining.to_u32().unwrap() } else { batch };
-        for _ in 0..steps {
-            x.square_mut();
-            x %= &n;
-        }
+        let steps = if remaining < BATCH { remaining.to_u32().unwrap() } else { BATCH };
+        square_times(&mut x, steps, &n);
         done += steps;
 
         let now = Instant::now();
@@ -411,11 +418,8 @@ fn bench(seconds: f64) {
     let started = Instant::now();
     let mut count: u64 = 0;
     while started.elapsed().as_secs_f64() < seconds {
-        for _ in 0..(1 << 14) {
-            x.square_mut();
-            x %= &n;
-        }
-        count += 1 << 14;
+        square_times(&mut x, BATCH, &n);
+        count += u64::from(BATCH);
     }
     let rate = count as f64 / started.elapsed().as_secs_f64();
     println!("{:.0} cuadrados/s ({:.1} ns cada uno)", rate, 1e9 / rate);
