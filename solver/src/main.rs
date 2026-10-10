@@ -218,13 +218,11 @@ fn key_from_b(b: &Integer, n: &Integer) -> [u8; 32] {
 fn decrypt(entry: &Entry, b: &Integer, n: &Integer) -> Result<String, String> {
     let key = key_from_b(b, n);
     let iv = B64.decode(&entry.iv_b64).map_err(|e| format!("iv: {e}"))?;
-    if iv.len() != 12 {
-        return Err("el iv no tiene 12 bytes".into());
-    }
+    let nonce = Nonce::try_from(iv.as_slice()).map_err(|_| "el iv no tiene 12 bytes".to_string())?;
     let ct = B64.decode(&entry.ciphertext_b64).map_err(|e| format!("ciphertext: {e}"))?;
     let cipher = Aes256Gcm::new_from_slice(&key).map_err(|e| e.to_string())?;
     let plain = cipher
-        .decrypt(Nonce::from_slice(&iv), ct.as_ref())
+        .decrypt(&nonce, ct.as_ref())
         .map_err(|_| "falló el descifrado: T o N equivocados, o el mensaje fue alterado".to_string())?;
     String::from_utf8(plain).map_err(|_| "el mensaje no está en UTF-8".into())
 }
