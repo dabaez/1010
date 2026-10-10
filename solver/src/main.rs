@@ -249,10 +249,10 @@ fn fmt_duration(secs: f64) -> String {
 
 fn seal_name(seal: &str) -> &str {
     match seal {
-        "short" => "corto",
-        "decade" => "década",
-        "century" => "siglo",
-        "millennium" => "milenio",
+        "y1" => "de 1 año",
+        "y5" => "de 5 años",
+        "y50" => "de 50 años",
+        "y1000" => "de 1.000 años",
         other => other,
     }
 }
@@ -420,7 +420,7 @@ fn bench(seconds: f64) {
     let rate = count as f64 / started.elapsed().as_secs_f64();
     println!("{:.0} cuadrados/s ({:.1} ns cada uno)", rate, 1e9 / rate);
     println!();
-    for (seal, years) in [("short", 1.0), ("decade", 10.0), ("century", 100.0), ("millennium", 1000.0)] {
+    for (seal, years) in [("y1", 1.0), ("y5", 5.0), ("y50", 50.0), ("y1000", 1000.0)] {
         let t = (rate * SECONDS_PER_YEAR * years).round();
         println!("{seal:10} {years:>5} y  T = {:.0}", t);
     }

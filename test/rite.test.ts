@@ -236,7 +236,7 @@ describe('the ledger', () => {
     expect(l2027.tower!.state_before).toBe(l2026.tower!.state_after);
     expect(l2027.tower!.decided_by).toBe('no_votes');
     expect(l2027.beacon.tiebreak.derivation).not.toBeNull();
-    expect(l2026.seals.t.short).toMatch(/^\d+$/);
+    expect(l2026.seals.t.y1).toMatch(/^\d+$/);
 
     // Rebuild the tower from the ledgers alone.
     let state = START_STATE;

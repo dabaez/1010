@@ -81,14 +81,15 @@ Un mensaje sellado es `N`, `T`, `iv` y `ciphertext` (y el `name` opcional, en te
   16 bytes al final) bajo K con el `iv` de 12 bytes (base64) y sin datos
   adicionales. Está en UTF-8.
 
-Quien escribe elige un sello, y el sello fija T:
+Quien escribe elige un sello, y el sello fija T. Cada sello se nombra por el
+tiempo que tomaría abrirlo en un procesador de escritorio veloz de ese año:
 
-| Sello  | Objetivo: tiempo para abrirlo en un procesador de escritorio veloz de ese año |
-| ------ | ----------------------------------------------------------------------------- |
-| Corto  | 1 año                                                                         |
-| Década | 10 años                                                                       |
-| Siglo  | 100 años                                                                      |
-| Milenio | 1.000 años                                                                   |
+| Sello      | En el registro |
+| ---------- | -------------- |
+| 1 año      | `y1`           |
+| 5 años     | `y5`           |
+| 50 años    | `y50`          |
+| 1.000 años | `y1000`        |
 
 T es la cantidad de cuadrados modulares de 2048 bits por segundo que hace un
 procesador de escritorio veloz con GMP, medida antes de cada Día, multiplicada

@@ -3,12 +3,13 @@
 // every year before the Day, add that year's row, and the year's T goes into
 // its ledger.
 
-export const SEALS = ['short', 'decade', 'century', 'millennium'] as const;
+/** Named by how long each takes to open: 1, 5, 50 and 1,000 years. */
+export const SEALS = ['y1', 'y5', 'y50', 'y1000'] as const;
 export type Seal = (typeof SEALS)[number];
 
-export const SEAL_YEARS: Record<Seal, number> = { short: 1, decade: 10, century: 100, millennium: 1000 };
+export const SEAL_YEARS: Record<Seal, number> = { y1: 1, y5: 5, y50: 50, y1000: 1000 };
 
-export const SEAL_LABELS: Record<Seal, string> = { short: 'Corto', decade: 'Década', century: 'Siglo', millennium: 'Milenio' };
+export const SEAL_LABELS: Record<Seal, string> = { y1: '1 año', y5: '5 años', y50: '50 años', y1000: '1.000 años' };
 
 export interface SealTable {
   /** what was benchmarked, for the record */
@@ -26,10 +27,10 @@ export const SEAL_TABLES: Record<number, SealTable> = {
       date: '2026-10-03',
     },
     t: {
-      short: '34868142602589',
-      decade: '348681426025887',
-      century: '3486814260258865',
-      millennium: '34868142602588650',
+      y1: '34868142602589',
+      y5: '174340713012943',
+      y50: '1743407130129433',
+      y1000: '34868142602588650',
     },
   },
 };

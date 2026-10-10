@@ -87,7 +87,7 @@ export function renderEntries(entries: Entry[]): HTMLElement {
         { class: 'entry', id: `mensaje-${e.id}` },
         el('span', { class: 'entry-num mono' }, `#${e.id}`),
         el('span', { class: e.name ? 'entry-name' : 'entry-name anon' }, e.name ?? 'Anónimo'),
-        el('span', { class: 'entry-meta' }, `sello ${sealName(e.seal).toLowerCase()}`),
+        el('span', { class: 'entry-meta' }, `sello de ${sealName(e.seal)}`),
         cipherText(e.ciphertext_b64),
         el(
           'details',

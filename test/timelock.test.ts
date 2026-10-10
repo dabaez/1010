@@ -69,7 +69,7 @@ describe('seal and open', () => {
     const message = 'Sealed in the browser, opened by the solver.';
     const p = await seal(message, 1000n);
     const file = join(work, 'entry.json');
-    writeFileSync(file, JSON.stringify({ id: 1, year: 2026, seal: 'short', ...p }));
+    writeFileSync(file, JSON.stringify({ id: 1, year: 2026, seal: 'y1', ...p }));
     const out = execFileSync(SOLVER, ['open', '--file', file, '--dir', join(work, 'cp'), '--yes', '--quiet'], {
       encoding: 'utf8',
     });

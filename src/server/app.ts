@@ -238,7 +238,7 @@ export function createApp(deps: AppDeps) {
     const { seal, n_hex, t, iv_b64, ciphertext_b64 } = g.body;
     const name = cleanName(g.body.name);
     if (name === false) return c.json({ error: `el nombre puede tener hasta ${MAX_NAME_CHARS} caracteres` }, 400);
-    if (!isSeal(seal)) return c.json({ error: 'elige un sello: corto, década, siglo o milenio' }, 400);
+    if (!isSeal(seal)) return c.json({ error: 'elige un sello: 1, 5, 50 o 1.000 años' }, 400);
     if (String(t) !== sealTableFor(g.year).t[seal]) return c.json({ error: `T no coincide con el sello ${seal} de ${g.year}` }, 400);
     if (typeof n_hex !== 'string' || !/^[0-9a-f]+$/.test(n_hex) || BigInt('0x' + n_hex).toString(2).length !== MODULUS_BITS) {
       return c.json({ error: `N debe ser un número de ${MODULUS_BITS} bits en hexadecimal en minúsculas` }, 400);

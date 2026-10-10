@@ -32,18 +32,18 @@ describe('identity', () => {
 describe('the sealed guestbook', () => {
   it('stores ciphertext only, one entry per person, with the year’s T', async () => {
     const h = harness({ at: MIDDLE });
-    const t = BigInt(sealTableFor(2026).t.short);
+    const t = BigInt(sealTableFor(2026).t.y1);
     const sealed = await seal('to whoever is listening in 2027', t);
 
-    const ok = await post(h, '/api/guestbook', { seal: 'short', ...sealed, captcha: 'ok' }, '10.9.9.9');
+    const ok = await post(h, '/api/guestbook', { seal: 'y1', ...sealed, captcha: 'ok' }, '10.9.9.9');
     expect(ok.status).toBe(200);
     const { id } = await ok.json();
 
-    const again = await post(h, '/api/guestbook', { seal: 'short', ...sealed, captcha: 'ok' }, '10.9.9.1');
+    const again = await post(h, '/api/guestbook', { seal: 'y1', ...sealed, captcha: 'ok' }, '10.9.9.1');
     expect(again.status).toBe(409);
 
     const entry = await (await get(h, `/api/guestbook/${id}`)).json();
-    expect(entry).toEqual({ id, year: 2026, seal: 'short', name: null, ...sealed, created_at: '2026-10-10T12:00:00.000Z' });
+    expect(entry).toEqual({ id, year: 2026, seal: 'y1', name: null, ...sealed, created_at: '2026-10-10T12:00:00.000Z' });
     expect(JSON.stringify(entry)).not.toContain('listening');
 
     const list = await (await get(h, '/api/guestbook?year=2026')).json();
@@ -55,33 +55,33 @@ describe('the sealed guestbook', () => {
 
   it('keeps an optional name in plaintext next to the sealed message', async () => {
     const h = harness({ at: MIDDLE });
-    const sealed = await seal('secret words', BigInt(sealTableFor(2026).t.decade));
-    const r = await post(h, '/api/guestbook', { seal: 'decade', name: '  Ana   de 2026 ', ...sealed, captcha: 'ok' });
+    const sealed = await seal('secret words', BigInt(sealTableFor(2026).t.y5));
+    const r = await post(h, '/api/guestbook', { seal: 'y5', name: '  Ana   de 2026 ', ...sealed, captcha: 'ok' });
     expect(r.status).toBe(200);
     const { id } = await r.json();
     const entry = await (await get(h, `/api/guestbook/${id}`)).json();
     expect(entry.name).toBe('Ana de 2026');
     expect(JSON.stringify(entry)).not.toContain('secret words');
-    const tooLong = await post(h, '/api/guestbook', { seal: 'decade', name: 'x'.repeat(41), ...sealed, captcha: 'ok' });
+    const tooLong = await post(h, '/api/guestbook', { seal: 'y5', name: 'x'.repeat(41), ...sealed, captcha: 'ok' });
     expect(tooLong.status).toBe(400);
   });
 
-  it('takes a millennium seal, whose T is past 2^53', async () => {
+  it('takes a 1,000-year seal, whose T is past 2^53', async () => {
     const h = harness({ at: MIDDLE });
-    const t = sealTableFor(2026).t.millennium;
+    const t = sealTableFor(2026).t.y1000;
     expect(BigInt(t)).toBeGreaterThan(2n ** 53n);
     const sealed = await seal('para el año 3026', BigInt(t));
     expect(sealed.t).toBe(t);
-    const r = await post(h, '/api/guestbook', { seal: 'millennium', ...sealed, captcha: 'ok' });
+    const r = await post(h, '/api/guestbook', { seal: 'y1000', ...sealed, captcha: 'ok' });
     expect(r.status).toBe(200);
     const entry = await (await get(h, `/api/guestbook/${(await r.json()).id}`)).json();
-    expect(entry).toMatchObject({ seal: 'millennium', t });
+    expect(entry).toMatchObject({ seal: 'y1000', t });
   });
 
   it('can have its name removed by hand, keeping the message', async () => {
     const h = harness({ at: MIDDLE });
-    const sealed = await seal('kept', BigInt(sealTableFor(2026).t.short));
-    const { id } = await (await post(h, '/api/guestbook', { seal: 'short', name: 'algo feo', ...sealed, captcha: 'ok' })).json();
+    const sealed = await seal('kept', BigInt(sealTableFor(2026).t.y1));
+    const { id } = await (await post(h, '/api/guestbook', { seal: 'y1', name: 'algo feo', ...sealed, captcha: 'ok' })).json();
     const { hideName, namedEntries } = await import('../src/server/rite');
     expect(namedEntries(h.rite, 2026)).toEqual([{ id, name: 'algo feo' }]);
     expect(hideName(h.rite, id)).toEqual({ year: 2026, name: 'algo feo' });
@@ -105,22 +105,22 @@ describe('the sealed guestbook', () => {
   it('rejects a T that does not match the chosen seal, and malformed puzzles', async () => {
     const h = harness({ at: MIDDLE });
     const sealed = await seal('x', 1000n);
-    const bad = await post(h, '/api/guestbook', { seal: 'short', ...sealed, captcha: 'ok' });
+    const bad = await post(h, '/api/guestbook', { seal: 'y1', ...sealed, captcha: 'ok' });
     expect(bad.status).toBe(400);
-    const t = sealTableFor(2026).t.century;
+    const t = sealTableFor(2026).t.y50;
     const cases = [
       { seal: 'forever', ...sealed, t },
-      { seal: 'century', ...sealed, t, n_hex: 'abc' },
-      { seal: 'century', ...sealed, t, iv_b64: 'AAAA' },
-      { seal: 'century', ...sealed, t, ciphertext_b64: 'A'.repeat(8000) },
-      { seal: 'century', ...sealed, t, ciphertext_b64: '!!' },
+      { seal: 'y50', ...sealed, t, n_hex: 'abc' },
+      { seal: 'y50', ...sealed, t, iv_b64: 'AAAA' },
+      { seal: 'y50', ...sealed, t, ciphertext_b64: 'A'.repeat(8000) },
+      { seal: 'y50', ...sealed, t, ciphertext_b64: '!!' },
     ];
     for (const c of cases) expect((await post(h, '/api/guestbook', { ...c, captcha: 'ok' })).status, JSON.stringify(c).slice(0, 60)).toBe(400);
   });
 
   it('is locked outside the Day', async () => {
     const h = harness({ at: '2026-10-12T00:00:00Z' });
-    const r = await post(h, '/api/guestbook', { seal: 'short' });
+    const r = await post(h, '/api/guestbook', { seal: 'y1' });
     expect(r.status).toBe(423);
     expect((await r.json()).opensAt).toBe('2027-10-09T10:00:00.000Z');
   });
@@ -155,8 +155,8 @@ describe('the end of programming', () => {
 describe('the archive', () => {
   it('serves the latest year in full, a line per year, and one page per year', async () => {
     const h = harness({ at: '2026-10-10T12:00:00Z' });
-    const sealed = await seal('hola', BigInt(sealTableFor(2026).t.short));
-    await post(h, '/api/guestbook', { seal: 'short', name: 'Ana', ...sealed, captcha: 'ok' });
+    const sealed = await seal('hola', BigInt(sealTableFor(2026).t.y1));
+    await post(h, '/api/guestbook', { seal: 'y1', name: 'Ana', ...sealed, captcha: 'ok' });
     h.clock.set('2027-11-01T00:00:00Z');
     await get(h, '/api/state');
     const { tick } = await import('../src/server/rite');
