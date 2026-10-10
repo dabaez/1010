@@ -38,6 +38,9 @@ pnpm test                         # RUN_NETWORK_TESTS=1 also hits drand and NIST
 For live reload, run `pnpm dev:server` and `pnpm dev` side by side (Astro
 proxies `/api` to the server).
 
+To see the site with years of made-up history, `pnpm demo [years] [--open]` serves
+one at http://127.0.0.1:8711 from `data/demo.sqlite`.
+
 Simulating the Day (all refused when `NODE_ENV=production`):
 
 ```sh
