@@ -39,9 +39,16 @@ export async function mountCaptcha(container: HTMLElement, siteKey: string | nul
   await loadScript();
   let current: string | null = null;
   let waiters: ((t: string) => void)[] = [];
+  // Invisible unless Cloudflare wants the visitor to click; the container
+  // only takes up room (data-shown) once it does.
   const id = window.turnstile!.render(container, {
     sitekey: siteKey,
     theme: 'dark',
+    language: 'es',
+    appearance: 'interaction-only',
+    'before-interactive-callback': () => {
+      container.dataset.shown = '';
+    },
     callback: (t: string) => {
       current = t;
       waiters.forEach((w) => w(t));
@@ -55,6 +62,7 @@ export async function mountCaptcha(container: HTMLElement, siteKey: string | nul
     token: () => (current ? Promise.resolve(current) : new Promise((r) => waiters.push(r))),
     reset() {
       current = null;
+      delete container.dataset.shown;
       window.turnstile!.reset(id);
     },
   };

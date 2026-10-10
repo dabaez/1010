@@ -93,11 +93,10 @@
     outline: 2px solid var(--gold);
     outline-offset: 2px;
   }
-  .status:empty,
-  .captcha:empty {
+  .status:empty {
     display: none;
   }
-  .captcha {
+  .captcha[data-shown] {
     margin: 1rem 0;
   }
 </style>
