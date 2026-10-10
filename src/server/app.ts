@@ -10,7 +10,7 @@ import { OPTIMAL_TOTAL, distanceToGoal, isComplete, legalMoves, moveName } from 
 import type { Captcha } from './captcha';
 import { voterHash } from './identity';
 import { LIMITS, RateLimiter } from './ratelimit';
-import { entriesFor, entryById, ledgerFor, towerHistory, yearFull, yearSummaries, yearView } from './records';
+import { entriesFor, entryById, entryCount, ledgerFor, towerHistory, yearFull, yearSummaries, yearView } from './records';
 import {
   addEntry,
   castVote,
@@ -116,7 +116,7 @@ export function createApp(deps: AppDeps) {
     const open = p === 'open';
     const voter = open ? identity(c, window.year) : null;
     const table = sealTableOf(rite.db, window.year);
-    const shown = latest ? yearView(latest, undefined, -1, entriesFor(rite.db, latest.year).length) : null;
+    const shown = latest ? yearView(latest, undefined, -1, entryCount(rite.db, latest.year)) : null;
 
     return c.json({
       serverNow: now.toISOString(),

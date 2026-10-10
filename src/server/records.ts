@@ -137,6 +137,10 @@ export function entriesFor(db: DB, year: number) {
   return db.select().from(guestbook).where(eq(guestbook.year, year)).orderBy(asc(guestbook.id)).all().map(entryView);
 }
 
+export function entryCount(db: DB, year: number): number {
+  return db.select({ n: sql<number>`count(*)` }).from(guestbook).where(eq(guestbook.year, year)).get()!.n;
+}
+
 export function entryById(db: DB, id: number) {
   const e = db.select().from(guestbook).where(eq(guestbook.id, id)).get();
   return e ? entryView(e) : null;
