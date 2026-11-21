@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@hono/node-server": "^2.1.6",
-    "better-sqlite3": "^13.0.3",
+    "better-sqlite3": "^13.2.0",
     "drand-client": "^1.4.2",
     "drizzle-orm": "^0.45.4",
     "hono": "^4.13.17"
